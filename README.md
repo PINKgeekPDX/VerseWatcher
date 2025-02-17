@@ -4,13 +4,32 @@ A real-time game.log monitoring tool ive made for Star Citizen. It tracks and no
 
 This is a very early WIP of this tool. This is basically using tech ive been developing for a bigger project still in development and iv'e decided to make a more simple tool that does some of the useful stuff of the bigger project, so this is what it has become. I do plan to add more features to this tool in the future over time and keep it up to date with the latest changes in the game.
 
+## Usefulness
+
+- Keep track of player names, time/date, weapon used, ship used of players and NPC have killed or that had killed you
+
+- Works with any version (LIVE, PTU, etc..)
+
+- Works in Persistent Universe and Arena Commander Modes 
+
+
 ## Screenshots
 
-![Screenshot 1](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/1.png)
-![Screenshot 2](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/2.png)
-![Screenshot 3](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/3.png)
-![Screenshot 4](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/4.png)
-![Screenshot 5](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/5.png)
+<a href="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/1.png">
+    <img src="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/1.png" width="150">
+</a>
+<a href="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/2.png">
+    <img src="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/2.png" width="150">
+</a>
+<a href="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/3.png">
+    <img src="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/3.png" width="150">
+</a>
+<a href="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/4.png">
+    <img src="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/4.png" width="150">
+</a>
+<a href="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/5.png">
+    <img src="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/5.png" width="150">
+</a>
 
 ## Features
 
