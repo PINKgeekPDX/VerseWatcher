@@ -1,0 +1,23 @@
+[tool.ruff]
+# Exclude some directories
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+]
+
+# Allow lines to be up to 100 characters
+line-length = 100
+
+# Enable all rules by default, then selectively disable
+select = ["E", "F", "W", "I", "N", "B", "UP"]
+ignore = [
+    # Allow module level imports not at top of file
+    # This is sometimes needed for PyQt5 apps
+    "E402",
+]
+
+# Don't automatically fix these errors
+unfixable = ["F401"]

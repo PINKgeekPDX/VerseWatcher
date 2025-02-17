@@ -1,37 +1,38 @@
-import sys
-import os
+import datetime
 import json
+import logging
+import os
+import sys
+import warnings
+
+import sip
+from PyQt5.QtCore import QSettings, Qt
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
     QApplication,
-    QMainWindow,
-    QWidget,
-    QVBoxLayout,
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QFileDialog,
+    QFrame,
+    QGridLayout,
+    QGroupBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QPushButton,
-    QTextEdit,
-    QFrame,
-    QFileDialog,
-    QTabWidget,
-    QGroupBox,
     QListWidget,
+    QListWidgetItem,
+    QMainWindow,
+    QPushButton,
+    QScrollArea,
+    QSplitter,
+    QTabWidget,
+    QTextEdit,
     QTreeWidget,
     QTreeWidgetItem,
-    QSplitter,
-    QListWidgetItem,
-    QComboBox,
-    QCheckBox,
-    QDialog,
-    QScrollArea,
-    QGridLayout,
+    QVBoxLayout,
+    QWidget,
 )
-from PyQt5.QtCore import Qt, QSettings
-from PyQt5.QtGui import QIcon
-import sip
-import datetime
-import logging
-import warnings
 
 # Suppress deprecation warnings for sip
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -46,8 +47,8 @@ except Exception:
     pass
 
 from game_watcher import GameLogWatcher
-from toast_manager import ToastManager
 from logger import Logger
+from toast_manager import ToastManager
 
 
 class MainWindow(QMainWindow):
@@ -63,14 +64,10 @@ class MainWindow(QMainWindow):
         self.player_name = None  # Initialize player_name attribute
 
         # Setup app directories
-        self.app_dir = os.path.join(
-            os.path.expanduser("~"), "Documents", "PINK", "VerseWatcher"
-        )
+        self.app_dir = os.path.join(os.path.expanduser("~"), "Documents", "PINK", "VerseWatcher")
         self.settings_file = os.path.join(self.app_dir, "settings.json")
         self.logs_dir = os.path.join(self.app_dir, "logs")
-        self.history_dir = os.path.join(
-            self.app_dir, "history"
-        )  # Add history directory
+        self.history_dir = os.path.join(self.app_dir, "history")  # Add history directory
 
         print("Creating directories...")
         # Create directories if they don't exist
@@ -98,12 +95,8 @@ class MainWindow(QMainWindow):
         try:
             # Try multiple possible icon locations
             possible_icon_paths = [
-                os.path.join(
-                    os.path.dirname(__file__), "..", "vw.ico"
-                ),  # Source directory
-                os.path.join(
-                    os.path.dirname(sys.executable), "vw.ico"
-                ),  # Executable directory
+                os.path.join(os.path.dirname(__file__), "..", "vw.ico"),  # Source directory
+                os.path.join(os.path.dirname(sys.executable), "vw.ico"),  # Executable directory
                 "vw.ico",  # Current directory
             ]
 
@@ -157,7 +150,7 @@ class MainWindow(QMainWindow):
         """Load and apply window geometry before window is shown"""
         try:
             if os.path.exists(self.settings_file):
-                with open(self.settings_file, "r") as f:
+                with open(self.settings_file) as f:
                     settings = json.load(f)
                     geometry = settings.get("window_geometry", {})
                     if geometry:
@@ -190,9 +183,7 @@ class MainWindow(QMainWindow):
 
                         # Apply geometry
                         self.setGeometry(x, y, width, height)
-                        print(
-                            f"Loaded window geometry: x={x}, y={y}, w={width}, h={height}"
-                        )
+                        print(f"Loaded window geometry: x={x}, y={y}, w={width}, h={height}")
                         return
 
             # If no geometry loaded, set default centered position
@@ -636,9 +627,7 @@ class MainWindow(QMainWindow):
                     self.logger.info(f"Started watching Game.log at: {game_log}")
                 else:
                     self.watcher = None
-                    self.player_name = (
-                        None  # Clear player name if watcher fails to start
-                    )
+                    self.player_name = None  # Clear player name if watcher fails to start
             else:
                 self.watcher.stop()
                 self.watcher = None
@@ -681,13 +670,9 @@ class MainWindow(QMainWindow):
         """Handle path input changes"""
         try:
             if text.strip():
-                self.path_input.setPlaceholderText(
-                    ""
-                )  # Clear placeholder when we have text
+                self.path_input.setPlaceholderText("")  # Clear placeholder when we have text
             else:
-                self.path_input.setPlaceholderText(
-                    "Select directory containing Game.log"
-                )
+                self.path_input.setPlaceholderText("Select directory containing Game.log")
             self.save_settings()
         except Exception as e:
             self.logger.error(f"Error in on_path_input_change: {str(e)}")
@@ -700,13 +685,9 @@ class MainWindow(QMainWindow):
         """Handle name input changes"""
         try:
             if text.strip():
-                self.name_input.setPlaceholderText(
-                    ""
-                )  # Clear placeholder when we have text
+                self.name_input.setPlaceholderText("")  # Clear placeholder when we have text
             else:
-                self.name_input.setPlaceholderText(
-                    "Your in-game playername (case sensitive!)"
-                )
+                self.name_input.setPlaceholderText("Your in-game playername (case sensitive!)")
             self.save_settings()
         except Exception as e:
             self.logger.error(f"Error in on_name_input_change: {str(e)}")
@@ -732,8 +713,7 @@ class MainWindow(QMainWindow):
                 "toast_config": {
                     "position": self.toast_position_combo.currentText(),
                     "size": self.toast_size_combo.currentText(),
-                    "duration": int(self.toast_duration_combo.currentText().split()[0])
-                    * 1000,
+                    "duration": int(self.toast_duration_combo.currentText().split()[0]) * 1000,
                 },
                 "event_filters": {
                     "self_events": self.self_events_check.isChecked(),
@@ -760,7 +740,7 @@ class MainWindow(QMainWindow):
         """Load settings from JSON file"""
         try:
             if os.path.exists(self.settings_file):
-                with open(self.settings_file, "r") as f:
+                with open(self.settings_file) as f:
                     settings = json.load(f)
 
                 # Load and set game path
@@ -806,9 +786,7 @@ class MainWindow(QMainWindow):
 
                     # Apply geometry
                     self.setGeometry(x, y, width, height)
-                    print(
-                        f"Restored window geometry: x={x}, y={y}, w={width}, h={height}"
-                    )
+                    print(f"Restored window geometry: x={x}, y={y}, w={width}, h={height}")
 
                 # Load toast configuration
                 toast_config = settings.get("toast_config", {})
@@ -831,21 +809,11 @@ class MainWindow(QMainWindow):
                 # Load event filters
                 event_filters = settings.get("event_filters", {})
                 if event_filters:
-                    self.self_events_check.setChecked(
-                        event_filters.get("self_events", True)
-                    )
-                    self.other_events_check.setChecked(
-                        event_filters.get("other_events", False)
-                    )
-                    self.npc_events_check.setChecked(
-                        event_filters.get("npc_events", False)
-                    )
-                    self.suicide_events_check.setChecked(
-                        event_filters.get("suicide_events", True)
-                    )
-                    self.party_events_check.setChecked(
-                        event_filters.get("party_events", True)
-                    )
+                    self.self_events_check.setChecked(event_filters.get("self_events", True))
+                    self.other_events_check.setChecked(event_filters.get("other_events", False))
+                    self.npc_events_check.setChecked(event_filters.get("npc_events", False))
+                    self.suicide_events_check.setChecked(event_filters.get("suicide_events", True))
+                    self.party_events_check.setChecked(event_filters.get("party_events", True))
 
                 # Load party members and update UI list
                 self.party_members = settings.get("party_members", [])
@@ -882,8 +850,7 @@ class MainWindow(QMainWindow):
                 "toast_config": {
                     "position": self.toast_position_combo.currentText(),
                     "size": self.toast_size_combo.currentText(),
-                    "duration": int(self.toast_duration_combo.currentText().split()[0])
-                    * 1000,
+                    "duration": int(self.toast_duration_combo.currentText().split()[0]) * 1000,
                 },
                 "event_filters": {
                     "self_events": self.self_events_check.isChecked(),
@@ -930,9 +897,7 @@ class MainWindow(QMainWindow):
             is_npc = "NPC" in vname or "NPC" in kname
             is_self_event = vname == self.player_name or kname == self.player_name
             is_party_event = vname in self.party_members or kname in self.party_members
-            is_other_event = not (
-                is_self_event or is_party_event or is_suicide or is_npc
-            )
+            is_other_event = not (is_self_event or is_party_event or is_suicide or is_npc)
 
             # Check if event should be processed based on filters
             should_process = (
@@ -990,9 +955,7 @@ class MainWindow(QMainWindow):
 
                 self.session_history[current_session].append(event_data)
                 # Save session to file
-                self.save_session_history(
-                    current_session, self.session_history[current_session]
-                )
+                self.save_session_history(current_session, self.session_history[current_session])
 
         except Exception as e:
             self.logger.error(f"Error adding kill event to history: {str(e)}")
@@ -1280,9 +1243,7 @@ class MainWindow(QMainWindow):
             ]
         )
         self.toast_position_combo.setCurrentText("Bottom Right")
-        self.toast_position_combo.currentTextChanged.connect(
-            self.on_toast_config_changed
-        )
+        self.toast_position_combo.currentTextChanged.connect(self.on_toast_config_changed)
         self.toast_position_combo.setMinimumHeight(30)
 
         # Size selection
@@ -1309,9 +1270,7 @@ class MainWindow(QMainWindow):
             ]
         )
         self.toast_duration_combo.setCurrentText("5 seconds")
-        self.toast_duration_combo.currentTextChanged.connect(
-            self.on_toast_config_changed
-        )
+        self.toast_duration_combo.currentTextChanged.connect(self.on_toast_config_changed)
         self.toast_duration_combo.setMinimumHeight(30)
 
         # Add to grid layout with proper spacing
@@ -1488,9 +1447,7 @@ class MainWindow(QMainWindow):
             button_layout.setSpacing(10)
 
             add_button = QPushButton("Add")
-            add_button.clicked.connect(
-                lambda: self.add_party_member(name_input.text(), dialog)
-            )
+            add_button.clicked.connect(lambda: self.add_party_member(name_input.text(), dialog))
 
             cancel_button = QPushButton("Cancel")
             cancel_button.setObjectName("cancelButton")
@@ -1530,9 +1487,7 @@ class MainWindow(QMainWindow):
         try:
             current_item = self.party_members_list.currentItem()
             if not current_item:
-                self.toast_manager.show_error_toast(
-                    "Please select a party member to remove"
-                )
+                self.toast_manager.show_error_toast("Please select a party member to remove")
                 return
 
             name = current_item.text()
@@ -1553,9 +1508,7 @@ class MainWindow(QMainWindow):
 
             layout = QVBoxLayout(dialog)
 
-            message = QLabel(
-                "Are you sure you want to clear all history?\nThis cannot be undone."
-            )
+            message = QLabel("Are you sure you want to clear all history?\nThis cannot be undone.")
             message.setObjectName("sectionLabel")
             layout.addWidget(message)
 
@@ -1589,9 +1542,7 @@ class MainWindow(QMainWindow):
                     try:
                         os.remove(os.path.join(self.history_dir, filename))
                     except Exception as e:
-                        self.logger.error(
-                            f"Error deleting history file {filename}: {str(e)}"
-                        )
+                        self.logger.error(f"Error deleting history file {filename}: {str(e)}")
 
             # Clear all event lists and details
             self.kill_list.clear()
@@ -1669,9 +1620,7 @@ class MainWindow(QMainWindow):
         # Create console output
         console_group = QGroupBox("Combat Feed")
         console_layout = QVBoxLayout(console_group)
-        console_layout.setContentsMargins(
-            5, 15, 5, 5
-        )  # Reduced margins, keep top margin for title
+        console_layout.setContentsMargins(5, 15, 5, 5)  # Reduced margins, keep top margin for title
         console_layout.setSpacing(0)  # Minimal spacing
 
         self.console_output = QTextEdit()
@@ -1715,9 +1664,7 @@ class MainWindow(QMainWindow):
         # Kill list group
         kill_group = QGroupBox("Combat Events")
         kill_layout = QVBoxLayout(kill_group)
-        kill_layout.setContentsMargins(
-            5, 15, 5, 5
-        )  # Reduced margins, keep top margin for title
+        kill_layout.setContentsMargins(5, 15, 5, 5)  # Reduced margins, keep top margin for title
         kill_layout.setSpacing(0)  # Minimal spacing
 
         self.kill_list = QListWidget()
@@ -1727,9 +1674,7 @@ class MainWindow(QMainWindow):
         # Kill details group
         details_group = QGroupBox("Event Details")
         details_layout = QVBoxLayout(details_group)
-        details_layout.setContentsMargins(
-            5, 15, 5, 5
-        )  # Reduced margins, keep top margin for title
+        details_layout.setContentsMargins(5, 15, 5, 5)  # Reduced margins, keep top margin for title
         details_layout.setSpacing(0)  # Minimal spacing
 
         self.kill_details = QTreeWidget()
@@ -1757,9 +1702,7 @@ class MainWindow(QMainWindow):
         # Party members group
         members_group = QGroupBox("Party Members")
         members_layout = QVBoxLayout(members_group)
-        members_layout.setContentsMargins(
-            5, 15, 5, 5
-        )  # Reduced margins, keep top margin for title
+        members_layout.setContentsMargins(5, 15, 5, 5)  # Reduced margins, keep top margin for title
         members_layout.setSpacing(5)  # Reduced spacing
 
         # Party list and controls
@@ -1790,9 +1733,7 @@ class MainWindow(QMainWindow):
         # Party events group
         events_group = QGroupBox("Party Events")
         events_layout = QVBoxLayout(events_group)
-        events_layout.setContentsMargins(
-            5, 15, 5, 5
-        )  # Reduced margins, keep top margin for title
+        events_layout.setContentsMargins(5, 15, 5, 5)  # Reduced margins, keep top margin for title
         events_layout.setSpacing(0)  # Minimal spacing
 
         self.party_event_list = QListWidget()
@@ -1802,9 +1743,7 @@ class MainWindow(QMainWindow):
         # Party event details group
         details_group = QGroupBox("Event Details")
         details_layout = QVBoxLayout(details_group)
-        details_layout.setContentsMargins(
-            5, 15, 5, 5
-        )  # Reduced margins, keep top margin for title
+        details_layout.setContentsMargins(5, 15, 5, 5)  # Reduced margins, keep top margin for title
         details_layout.setSpacing(0)  # Minimal spacing
 
         self.party_event_details = QTreeWidget()
@@ -1847,15 +1786,13 @@ class MainWindow(QMainWindow):
                         session_id = filename[8:-5].replace("-", ":")
 
                         # Load session data
-                        with open(os.path.join(self.history_dir, filename), "r") as f:
+                        with open(os.path.join(self.history_dir, filename)) as f:
                             session_data = json.load(f)
 
                         self.session_history[session_id] = session_data
                         self.session_combo.addItem(session_id)
                     except Exception as e:
-                        self.logger.error(
-                            f"Error loading session file {filename}: {str(e)}"
-                        )
+                        self.logger.error(f"Error loading session file {filename}: {str(e)}")
 
         except Exception as e:
             self.logger.error(f"Error loading session histories: {str(e)}")
@@ -1864,9 +1801,7 @@ class MainWindow(QMainWindow):
 def main():
     try:
         # Create log directory in user's documents
-        log_dir = os.path.join(
-            os.path.expanduser("~"), "Documents", "PINK", "VerseWatcher", "logs"
-        )
+        log_dir = os.path.join(os.path.expanduser("~"), "Documents", "PINK", "VerseWatcher", "logs")
         os.makedirs(log_dir, exist_ok=True)
 
         # Set up logging to file
@@ -1890,12 +1825,8 @@ def main():
         try:
             # Try multiple possible icon locations
             possible_icon_paths = [
-                os.path.join(
-                    os.path.dirname(__file__), "..", "vw.ico"
-                ),  # Source directory
-                os.path.join(
-                    os.path.dirname(sys.executable), "vw.ico"
-                ),  # Executable directory
+                os.path.join(os.path.dirname(__file__), "..", "vw.ico"),  # Source directory
+                os.path.join(os.path.dirname(sys.executable), "vw.ico"),  # Executable directory
                 "vw.ico",  # Current directory
             ]
 
@@ -1908,9 +1839,7 @@ def main():
                     break
 
             if not icon_set:
-                logging.warning(
-                    "Could not find vw.ico in any of the expected locations"
-                )
+                logging.warning("Could not find vw.ico in any of the expected locations")
         except Exception as e:
             logging.error(f"Error setting application icon: {str(e)}")
 

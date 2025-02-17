@@ -1,7 +1,7 @@
-import os
 import logging
-from logging.handlers import RotatingFileHandler
+import os
 from datetime import datetime
+from logging.handlers import RotatingFileHandler
 
 
 class Logger:
@@ -29,9 +29,7 @@ class Logger:
                 backupCount=5,
                 encoding="utf-8",
             )
-            handler.setFormatter(
-                logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-            )
+            handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
             self.file_logger.addHandler(handler)
         else:
             log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
@@ -48,9 +46,7 @@ class Logger:
                 backupCount=5,
                 encoding="utf-8",
             )
-            handler.setFormatter(
-                logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-            )
+            handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
             self.file_logger.addHandler(handler)
 
     def info(self, message):

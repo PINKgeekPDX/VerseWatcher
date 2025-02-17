@@ -1,7 +1,8 @@
 import os
 import re
-from PyQt5.QtCore import QTimer
 from datetime import datetime
+
+from PyQt5.QtCore import QTimer
 
 
 class GameLogWatcher:
@@ -37,11 +38,9 @@ class GameLogWatcher:
             self.last_position_file = os.path.join(game_path, "last_position.txt")
             if os.path.exists(self.last_position_file):
                 try:
-                    with open(self.last_position_file, "r") as f:
+                    with open(self.last_position_file) as f:
                         self.last_position = int(f.read())
-                    self.logger.info(
-                        f"Loaded last position from file: {self.last_position}"
-                    )
+                    self.logger.info(f"Loaded last position from file: {self.last_position}")
                 except Exception as e:
                     self.logger.error(f"Error loading last position: {str(e)}")
                     self.last_position = 0
@@ -92,9 +91,7 @@ class GameLogWatcher:
             # Verify log file exists
             if not os.path.exists(self.log_file):
                 self.logger.error(f"Log file not found: {self.log_file}")
-                self.toast_manager.show_error_toast(
-                    f"❌ Game.log not found at: {self.log_file} ⚠️"
-                )
+                self.toast_manager.show_error_toast(f"❌ Game.log not found at: {self.log_file} ⚠️")
                 return False
 
             # Set initial position to end of file - we ONLY want new events
@@ -104,14 +101,10 @@ class GameLogWatcher:
             )
 
             # Start polling timer - check frequently for real-time response
-            self.timer.start(
-                50
-            )  # Check every 50ms for more responsive real-time monitoring
+            self.timer.start(50)  # Check every 50ms for more responsive real-time monitoring
 
             # Show startup success toast
-            self.toast_manager.show_info_toast(
-                "🎮 Started watching for new game events ✨"
-            )
+            self.toast_manager.show_info_toast("🎮 Started watching for new game events ✨")
 
             return True
 

@@ -1,7 +1,7 @@
-from PyQt5.QtCore import Qt, QTimer, QRectF
-from PyQt5.QtGui import QPainter, QColor, QPainterPath, QLinearGradient, QPen
-from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QApplication
 import win32api
+from PyQt5.QtCore import QRectF, Qt, QTimer
+from PyQt5.QtGui import QColor, QLinearGradient, QPainter, QPainterPath, QPen
+from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 
 
 def get_real_monitor_rect():
@@ -33,11 +33,7 @@ class Toast(QWidget):
             # For death events, extract only the essential info
             if "weapon" in details:
                 weapon = next(
-                    (
-                        line.split(": ")[1]
-                        for line in details.split("\n")
-                        if "🔫 Weapon:" in line
-                    ),
+                    (line.split(": ")[1] for line in details.split("\n") if "🔫 Weapon:" in line),
                     "",
                 )
                 if weapon:
@@ -62,9 +58,7 @@ class Toast(QWidget):
         # Get default size if parent is not set
         default_size = "Medium"
         toast_size = (
-            default_size
-            if not hasattr(self, "parent") or not self.parent()
-            else self.parent().size
+            default_size if not hasattr(self, "parent") or not self.parent() else self.parent().size
         )
 
         self.label.setStyleSheet(f"""
@@ -158,7 +152,7 @@ class ToastManager:
                 toast.hide()
                 toast.deleteLater()
                 self._position_toasts()
-        except:
+        except Exception:
             pass
 
     def _position_toasts(self):
@@ -195,9 +189,7 @@ class ToastManager:
         # Position each toast
         total_height = sum(toast.height() + self.spacing for toast in self.toasts)
 
-        for i, toast in enumerate(
-            reversed(self.toasts)
-        ):  # Reverse the order for proper stacking
+        for i, toast in enumerate(reversed(self.toasts)):  # Reverse the order for proper stacking
             # Calculate position
             if "Bottom" in self.position:
                 y = base_y - total_height + (i * (toast.height() + self.spacing))
@@ -226,18 +218,12 @@ class ToastManager:
 
     def show_error_toast(self, message):
         """Show an error toast in red"""
-        self._show_toast(
-            {"title": "❌ Error", "details": message}, QColor(198, 40, 40, 230)
-        )
+        self._show_toast({"title": "❌ Error", "details": message}, QColor(198, 40, 40, 230))
 
     def show_info_toast(self, message):
         """Show an info toast in blue"""
-        self._show_toast(
-            {"title": "ℹ️ Info", "details": message}, QColor(13, 71, 161, 230)
-        )
+        self._show_toast({"title": "ℹ️ Info", "details": message}, QColor(13, 71, 161, 230))
 
     def show_success_toast(self, message):
         """Show a success toast in green"""
-        self._show_toast(
-            {"title": "✅ Success", "details": message}, QColor(46, 125, 50, 230)
-        )
+        self._show_toast({"title": "✅ Success", "details": message}, QColor(46, 125, 50, 230))
