@@ -15,35 +15,7 @@ This is a very early WIP of this tool. This is basically using tech ive been dev
 
 ## Screenshots
 
-<a href="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/1.png">
-    <img src="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/1.png" width="150">
-</a>
-<a href="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/2.png">
-    <img src="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/2.png" width="150">
-</a>
-<a href="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/3.png">
-    <img src="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/3.png" width="150">
-</a>
-<a href="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/4.png">
-    <img src="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/4.png" width="150">
-</a>
-<a href="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/5.png">
-    <img src="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/5.png" width="150">
-</a>">
-    <img src="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/1.png" width="150">
-</a>
-<a href="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/2.png">
-    <img src="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/2.png" width="150">
-</a>
-<a href="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/3.png">
-    <img src="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/3.png" width="150">
-</a>
-<a href="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/4.png">
-    <img src="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/4.png" width="150">
-</a>
-<a href="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/5.png">
-    <img src="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/5.png" width="150">
-</a>
+[![Screenshot 1](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/1.png)](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/1.png) | [![Screenshot 2](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/2.png)](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/2.png) | [![Screenshot 3](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/3.png)](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/3.png) | [![Screenshot 4](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/4.png)](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/4.png) | [![Screenshot 5](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/5.png)](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/5.png)
 
 ## Features
 
