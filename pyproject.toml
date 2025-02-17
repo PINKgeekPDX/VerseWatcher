@@ -8,10 +8,11 @@ exclude = [
     "dist",
 ]
 
-[tool.ruff.lint]
-# Allow lines to be up to 120 characters since UI code often needs more space
+# Line length settings
+[tool.ruff.format]
 line-length = 120
 
+[tool.ruff.lint]
 # Enable all rules by default, then selectively disable
 select = ["E", "F", "W", "I", "N", "B", "UP"]
 ignore = [
