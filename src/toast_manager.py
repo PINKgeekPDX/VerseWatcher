@@ -57,9 +57,7 @@ class Toast(QWidget):
         font_sizes = {"Small": 11, "Medium": 12, "Large": 13}
         # Get default size if parent is not set
         default_size = "Medium"
-        toast_size = (
-            default_size if not hasattr(self, "parent") or not self.parent() else self.parent().size
-        )
+        toast_size = default_size if not hasattr(self, "parent") or not self.parent() else self.parent().size
 
         self.label.setStyleSheet(f"""
             color: {text_color};

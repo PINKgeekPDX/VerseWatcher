@@ -96,9 +96,7 @@ class GameLogWatcher:
 
             # Set initial position to end of file - we ONLY want new events
             self.last_position = os.path.getsize(self.log_file)
-            self.logger.info(
-                f"Starting to watch ONLY new events from position {self.last_position}"
-            )
+            self.logger.info(f"Starting to watch ONLY new events from position {self.last_position}")
 
             # Start polling timer - check frequently for real-time response
             self.timer.start(50)  # Check every 50ms for more responsive real-time monitoring
@@ -147,7 +145,9 @@ class GameLogWatcher:
                     z = float(event_details["dirvecz"])
                     direction = f"x:{x:.1f}, y:{y:.1f}, z:{z:.1f}"
                 except (ValueError, TypeError):
-                    direction = f"x:{event_details['dirvecx']}, y:{event_details['dirvecy']}, z:{event_details['dirvecz']}"
+                    direction = (
+                        f"x:{event_details['dirvecx']}, y:{event_details['dirvecy']}, z:{event_details['dirvecz']}"
+                    )
 
                 # Add timestamp to event details
                 event_details["timestamp"] = datetime.now().strftime("%H:%M:%S")
@@ -182,9 +182,7 @@ class GameLogWatcher:
                     self.toast_manager.show_death_toast(toast_message, "kill")
 
                     # Track killstreak
-                    self.kill_counts[self.player_name] = (
-                        self.kill_counts.get(self.player_name, 0) + 1
-                    )
+                    self.kill_counts[self.player_name] = self.kill_counts.get(self.player_name, 0) + 1
                     streak = self.kill_counts[self.player_name]
                     if streak > 1:
                         self.toast_manager.show_killstreak_toast(

@@ -802,9 +802,7 @@ class MainWindow(QMainWindow):
                     self.toast_duration_combo.setCurrentText(duration_sec)
 
                     # Update toast manager configuration
-                    self.toast_manager.update_config(
-                        position=position, size=size, duration=duration_ms
-                    )
+                    self.toast_manager.update_config(position=position, size=size, duration=duration_ms)
 
                 # Load event filters
                 event_filters = settings.get("event_filters", {})
@@ -1764,9 +1762,7 @@ class MainWindow(QMainWindow):
     def save_session_history(self, session_id, events):
         """Save session history to a file"""
         try:
-            history_file = os.path.join(
-                self.history_dir, f"session_{session_id.replace(':', '-')}.json"
-            )
+            history_file = os.path.join(self.history_dir, f"session_{session_id.replace(':', '-')}.json")
             with open(history_file, "w") as f:
                 json.dump(events, f, indent=4)
         except Exception as e:
@@ -1805,9 +1801,7 @@ def main():
         os.makedirs(log_dir, exist_ok=True)
 
         # Set up logging to file
-        log_file = os.path.join(
-            log_dir, f"startup_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-        )
+        log_file = os.path.join(log_dir, f"startup_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
         logging.basicConfig(
             filename=log_file,
             level=logging.DEBUG,

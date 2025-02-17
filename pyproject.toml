@@ -8,8 +8,7 @@ exclude = [
     "dist",
 ]
 
-# Line length settings
-[tool.ruff.format]
+# Line length settings for all ruff operations
 line-length = 120
 
 [tool.ruff.lint]

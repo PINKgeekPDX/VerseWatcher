@@ -36,9 +36,7 @@ class Logger:
             if not os.path.exists(log_dir):
                 os.makedirs(log_dir)
 
-            self.log_file = os.path.join(
-                log_dir, f"versewatcher_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-            )
+            self.log_file = os.path.join(log_dir, f"versewatcher_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
 
             handler = RotatingFileHandler(
                 self.log_file,
