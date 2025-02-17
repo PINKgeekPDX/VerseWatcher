@@ -8,8 +8,9 @@ exclude = [
     "dist",
 ]
 
-# Allow lines to be up to 100 characters
-line-length = 100
+[tool.ruff.lint]
+# Allow lines to be up to 120 characters since UI code often needs more space
+line-length = 120
 
 # Enable all rules by default, then selectively disable
 select = ["E", "F", "W", "I", "N", "B", "UP"]
@@ -17,6 +18,12 @@ ignore = [
     # Allow module level imports not at top of file
     # This is sometimes needed for PyQt5 apps
     "E402",
+    # Allow function calls in argument defaults for Qt widgets
+    "B008",
+    # Allow PascalCase names for Qt overrides
+    "N802",
+    # Allow long lines in UI style strings
+    "E501",
 ]
 
 # Don't automatically fix these errors
