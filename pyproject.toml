@@ -24,6 +24,9 @@ ignore = [
     "N802",
     # Allow long lines in UI style strings
     "E501",
+    # Allow whitespace in blank lines in CSS-like strings
+    # This makes the CSS more readable
+    "W293",
 ]
 
 # Don't automatically fix these errors
