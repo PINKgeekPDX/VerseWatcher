@@ -15,7 +15,7 @@ This is a very early WIP of this tool. This is basically using tech ive been dev
 
 ## Screenshots
 
-<a href="<a href="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/1.png">
+<a href="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/1.png">
     <img src="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/1.png" width="150">
 </a>
 <a href="https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/2.png">
