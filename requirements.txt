@@ -1,0 +1,5 @@
+PyQt5==5.15.9
+watchdog==3.0.0
+pywin32==306
+pyinstaller==6.3.0
+sip==6.7.12
