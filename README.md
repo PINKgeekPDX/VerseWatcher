@@ -1,26 +1,37 @@
-# VerseWatcher
+# VerseWatcher - Star Citizen Event Notifier
 
-A real-time game log monitoring application that tracks and notifies you of in-game events with a modern, dark-themed interface.
+A real-time game.log monitoring tool ive made for Star Citizen. It tracks and notifies you of in-game events of simple but highly useful events and its details. 
+
+This is a very early WIP of this tool. This is basically using tech ive been developing for a bigger project still in development and iv'e decided to make a more simple tool that does some of the useful stuff of the bigger project, so this is what it has become. I do plan to add more features to this tool in the future over time and keep it up to date with the latest changes in the game.
+
+## Screenshots
+
+![Screenshot 1](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/1.png)
+![Screenshot 2](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/2.png)
+![Screenshot 3](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/3.png)
+![Screenshot 4](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/4.png)
+![Screenshot 5](https://raw.githubusercontent.com/PINKgeekPDX/VerseWatcher/main/5.png)
 
 ## Features
 
 - 🎮 Real-time Game.log monitoring
+
 - 🎯 Detailed kill/death event tracking
-- 🔔 Customizable toast notifications
-- 🌙 Modern dark theme with gradient accents
-- 👥 Party/team member tracking
-- 📊 Session history with detailed event information
-- 💾 Persistent settings and window geometry
-- 🔧 Customizable event filters
-- 📝 Detailed logging system
-- 🖥️ Console output window
+
+- 🔔 Toast notifications
+
+- 🌙 Clean UI
+
+- 👥 Party member tracking
+
+- 📊 App session persistent historical timeline records of events kept
 
 ## Requirements
 
-- Windows 10/11
-- Python 3.8 or higher
+- This app
+- Star Citizen
+- Python 3.8 or higher ( if you arent running from the .exe )
 - 100MB free disk space
-- Administrator privileges (for installation)
 
 ## Installation
 
@@ -86,43 +97,11 @@ To create a standalone executable:
    - Detailed information for each event
    - Filter events by type
 
-## File Structure
-
-```
-VerseWatcher/
-├── src/                    # Source code
-│   ├── main.py            # Main application
-│   ├── game_watcher.py    # Game log monitoring
-│   ├── toast_manager.py   # Toast notifications
-│   └── logger.py          # Logging system
-├── venv/                   # Virtual environment
-├── requirements.txt        # Python dependencies
-├── verse_watcher.spec     # PyInstaller spec
-├── start.bat              # Startup script
-├── vw.ico                 # Application icon
-└── README.md              # Documentation
-```
-
 ## Data Storage
 
 - Settings: `%USERPROFILE%\Documents\PINK\VerseWatcher\settings.json`
 - Logs: `%USERPROFILE%\Documents\PINK\VerseWatcher\logs\`
 - History: `%USERPROFILE%\Documents\PINK\VerseWatcher\history\`
-
-## Troubleshooting
-
-1. **Window not appearing:**
-   - Check if another instance is running
-   - Run as administrator
-
-2. **Game.log not found:**
-   - Verify the game directory path
-   - Ensure Game.log exists and is readable
-
-3. **Missing notifications:**
-   - Check event filter settings
-   - Verify player name is correct (case sensitive)
-   - Ensure Windows notifications are enabled
 
 ## Contributing
 
@@ -134,10 +113,6 @@ VerseWatcher/
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- PyQt5 for the GUI framework
-- Watchdog for file monitoring
-- The Star Citizen community
+- This project is licensed under the MIT License - see the LICENSE file for details.
+- This app does not interfere with your game in any way. 
+- It will not be flagged by anticheat as it is totally passive.
