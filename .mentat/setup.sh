@@ -4,4 +4,4 @@
 pip install -r requirements.txt
 
 # Install development tools
-pip install ruff pyright pytest
+pip install -r dev-requirements.txt
