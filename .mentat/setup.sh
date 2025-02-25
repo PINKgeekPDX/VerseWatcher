@@ -15,4 +15,4 @@ fi
 rm requirements_temp.txt
 
 # Install development dependencies
-pip install ruff pyright
+pip install ruff
