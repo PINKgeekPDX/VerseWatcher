@@ -1,8 +1,9 @@
 import logging
-from logging.handlers import RotatingFileHandler
 from datetime import datetime
-from PyQt5.QtWidgets import QTreeWidgetItem
+from logging.handlers import RotatingFileHandler
+
 from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QTreeWidgetItem
 
 
 class Logger:
@@ -27,9 +28,7 @@ class Logger:
                     level=logging.INFO,
                     format="%(asctime)s [%(levelname)s] %(message)s",
                     handlers=[
-                        RotatingFileHandler(
-                            self.log_file, maxBytes=1024 * 1024, backupCount=5
-                        ),
+                        RotatingFileHandler(self.log_file, maxBytes=1024 * 1024, backupCount=5),
                         logging.StreamHandler(),
                     ],
                 )
@@ -63,9 +62,7 @@ class Logger:
                     "npc": ("🤖", "#FFD740", "NPC"),
                 }
 
-                icon, color, type_text = type_info.get(
-                    msg_type, ("📝", "#FFFFFF", "Log")
-                )
+                icon, color, type_text = type_info.get(msg_type, ("📝", "#FFFFFF", "Log"))
 
                 # Set text for each column
                 item.setText(0, timestamp)

@@ -1,7 +1,8 @@
 import os
 import re
-from PyQt5.QtCore import QTimer
 from datetime import datetime
+
+from PyQt5.QtCore import QTimer
 
 
 class GameLogWatcher:
@@ -34,9 +35,7 @@ class GameLogWatcher:
                 r"\s+\[Team_ActorTech\]\[Actor\]$"
             )
 
-            self.logger.log_debug(
-                f"GameLogWatcher initialized with game_path: {game_path}"
-            )
+            self.logger.log_debug(f"GameLogWatcher initialized with game_path: {game_path}")
             self.logger.log_debug(f"Looking for log file at: {self.log_file}")
 
             # Load last position from file if available
@@ -45,9 +44,7 @@ class GameLogWatcher:
                 try:
                     with open(self.last_position_file, "r") as f:
                         self.last_position = int(f.read())
-                    self.logger.log_info(
-                        f"Loaded last position from file: {self.last_position}"
-                    )
+                    self.logger.log_info(f"Loaded last position from file: {self.last_position}")
                 except Exception as e:
                     self.logger.log_error(f"Error loading last position: {str(e)}")
                     self.last_position = 0
@@ -72,9 +69,7 @@ class GameLogWatcher:
                 current_size = os.path.getsize(self.log_file)
                 # Only process if there is new content in the file
                 if current_size > self.last_position:
-                    with open(
-                        self.log_file, "r", encoding="utf-8", errors="replace"
-                    ) as f:
+                    with open(self.log_file, "r", encoding="utf-8", errors="replace") as f:
                         # Seek to the last read position
                         f.seek(self.last_position)
                         new_lines = f.readlines()
@@ -85,9 +80,7 @@ class GameLogWatcher:
                                 try:
                                     self.process_line(line)
                                 except Exception as e:
-                                    self.logger.log_error(
-                                        f"Error processing line: {str(e)}"
-                                    )
+                                    self.logger.log_error(f"Error processing line: {str(e)}")
                                     continue
             except (IOError, OSError) as e:
                 self.logger.log_error(f"Error accessing game log file: {str(e)}")
@@ -131,9 +124,7 @@ class GameLogWatcher:
                     return False
 
                 # Show a startup success toast
-                self.toast_manager.show_info_toast(
-                    "🎮 Started watching for new game events ✨"
-                )
+                self.toast_manager.show_info_toast("🎮 Started watching for new game events ✨")
                 return True
 
             except (IOError, OSError) as e:
@@ -205,33 +196,23 @@ class GameLogWatcher:
                 kname_is_npc = ("NPC" in kname) or kname.startswith("PU_")
 
                 if vname == kname:
-                    self.logger.log_event(
-                        f"{vname} committed suicide using {kwep}", event_details
-                    )
+                    self.logger.log_event(f"{vname} committed suicide using {kwep}", event_details)
                     toast_message["title"] = f"💀 {vname} committed suicide 🔫"
                     self.toast_manager.show_death_toast(toast_message, "suicide")
                 elif vname_is_npc or kname_is_npc:
                     if vname_is_npc:
-                        self.logger.log_event(
-                            f"NPC killed by {kname} using {kwep}", event_details
-                        )
+                        self.logger.log_event(f"NPC killed by {kname} using {kwep}", event_details)
                         toast_message["title"] = f"🤖 NPC eliminated by {kname} ⚔️"
                     else:
-                        self.logger.log_event(
-                            f"{vname} killed by NPC using {kwep}", event_details
-                        )
+                        self.logger.log_event(f"{vname} killed by NPC using {kwep}", event_details)
                         toast_message["title"] = f"🤖 {vname} eliminated by NPC ⚔️"
                     self.toast_manager.show_death_toast(toast_message, "npc")
                 elif vname == self.player_name:
-                    self.logger.log_event(
-                        f"You were killed by {kname} using {kwep}", event_details
-                    )
+                    self.logger.log_event(f"You were killed by {kname} using {kwep}", event_details)
                     toast_message["title"] = f"☠️ You were eliminated by {kname} ⚰️"
                     self.toast_manager.show_death_toast(toast_message, "death")
                 elif kname == self.player_name:
-                    self.logger.log_event(
-                        f"You killed {vname} using {kwep}", event_details
-                    )
+                    self.logger.log_event(f"You killed {vname} using {kwep}", event_details)
                     toast_message["title"] = f"🎯 You eliminated {vname} ✨"
                     self.toast_manager.show_death_toast(toast_message, "kill")
 
