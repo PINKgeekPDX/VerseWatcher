@@ -1,6 +1,9 @@
 import sys
 import os
 import json
+from game_watcher import GameLogWatcher
+from toast_manager import ToastManager
+from logger import Logger
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -43,10 +46,6 @@ try:
         sip.setapi("QString", 2)
 except Exception:
     pass
-
-from game_watcher import GameLogWatcher
-from toast_manager import ToastManager
-from logger import Logger
 
 
 class MainWindow(QMainWindow):
@@ -2461,7 +2460,7 @@ class MainWindow(QMainWindow):
                 try:
                     with open(history_file, "r") as f:
                         existing_events = json.load(f)
-                except:
+                except Exception:
                     existing_events = []
 
             # Append new events

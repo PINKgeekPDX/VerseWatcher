@@ -166,7 +166,7 @@ class ToastManager:
                 toast.hide()
                 toast.deleteLater()
                 self._position_toasts()
-        except:
+        except Exception:
             pass
 
     def _position_toasts(self):
