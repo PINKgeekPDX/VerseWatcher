@@ -17,7 +17,8 @@ class Logger:
 
         self.setup_logging()
         print(
-            f"Logger initialized - Console: {'Yes' if console_widget else 'No'}, File: {'Yes' if log_file else 'No'}"
+            f"Logger initialized - Console: {'Yes' if console_widget else 'No'}, "
+            f"File: {'Yes' if log_file else 'No'}"
         )
 
     def setup_logging(self):

@@ -25,7 +25,8 @@ class GameLogWatcher:
             self.timer.timeout.connect(self.check_file)
 
             # Death event pattern – using the known working pattern.
-            # Note: the direction vector groups (dirvecx, dirvecy, dirvecz) are captured but will be removed.
+            # Note: the direction vector groups (dirvecx, dirvecy, dirvecz) are captured
+            # but will be removed.
             self.death_pattern = re.compile(
                 r"^(?P<timestamp>\S+)\s+\[Notice\]\s+<Actor Death> CActor::Kill:\s+"
                 r"\'(?P<vname>[^\']+)\'\s+\[\d+\]\s+in zone\s+\'(?P<vship>[^\']+)\'\s+"
