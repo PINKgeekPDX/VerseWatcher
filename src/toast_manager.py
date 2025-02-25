@@ -58,8 +58,8 @@ class Toast(QWidget):
         self.label = QLabel(title)
         font_sizes = {
             "Small": 11,
-            "Medium": 13,
-            "Large": 15
+            "Medium": 12,
+            "Large": 13
         }
         # Get default size if parent is not set
         default_size = "Medium"
@@ -67,7 +67,7 @@ class Toast(QWidget):
         
         self.label.setStyleSheet(f"""
             color: {text_color};
-            font-size: {font_sizes.get(toast_size, 13)}px;
+            font-size: {font_sizes.get(toast_size, 12)}px;
             font-weight: bold;
             padding: 2px;
             background: transparent;
@@ -78,14 +78,14 @@ class Toast(QWidget):
         
         # Set fixed height and minimum width based on size
         heights = {
-            "Small": 28,
+            "Small": 32,
             "Medium": 36,
-            "Large": 44
+            "Large": 40
         }
         min_widths = {
-            "Small": 200,
+            "Small": 250,
             "Medium": 300,
-            "Large": 400
+            "Large": 350
         }
         self.setFixedHeight(heights.get(toast_size, 36))
         self.setMinimumWidth(min_widths.get(toast_size, 300))
@@ -96,33 +96,25 @@ class Toast(QWidget):
         
         # Create rounded rectangle path
         path = QPainterPath()
-        path.addRoundedRect(QRectF(self.rect()), 6, 6)
+        path.addRoundedRect(QRectF(self.rect()), 4, 4)
         
         # Create gradient background
         gradient = QLinearGradient(0, 0, self.width(), 0)
         gradient.setColorAt(0, self.bg_color)
-        gradient.setColorAt(0.5, QColor(
-            min(self.bg_color.red() + 20, 255),
-            min(self.bg_color.green() + 20, 255),
-            min(self.bg_color.blue() + 20, 255),
+        gradient.setColorAt(1, QColor(
+            min(self.bg_color.red() + 15, 255),
+            min(self.bg_color.green() + 15, 255),
+            min(self.bg_color.blue() + 15, 255),
             self.bg_color.alpha()
         ))
-        gradient.setColorAt(1, self.bg_color)
         
-        # Draw background with gradient
+        # Draw background
         painter.fillPath(path, gradient)
         
-        # Draw subtle glow effect
-        glow = QPainterPath()
-        glow.addRoundedRect(QRectF(self.rect()).adjusted(1, 1, -1, -1), 6, 6)
-        painter.strokePath(glow, QPen(QColor(255, 255, 255, 15), 2))
-        
-        # Draw border with gradient
-        border_gradient = QLinearGradient(0, 0, self.width(), 0)
-        border_gradient.setColorAt(0, QColor(255, 255, 255, 40))
-        border_gradient.setColorAt(0.5, QColor(255, 255, 255, 80))
-        border_gradient.setColorAt(1, QColor(255, 255, 255, 40))
-        painter.strokePath(path, QPen(border_gradient, 1))
+        # Draw subtle border
+        border_color = QColor(255, 255, 255, 30)  # Very subtle white border
+        painter.setPen(QPen(border_color, 1))
+        painter.drawPath(path)
 
 class ToastManager:
     def __init__(self):
@@ -226,8 +218,8 @@ class ToastManager:
         
     def show_info_toast(self, message):
         """Show an info toast in blue"""
-        self._show_toast({'title': '🛈 Info', 'details': message}, QColor(13, 71, 161, 230))
+        self._show_toast({'title': 'ℹ️ Info', 'details': message}, QColor(13, 71, 161, 230))
         
     def show_success_toast(self, message):
         """Show a success toast in green"""
-        self._show_toast({'title': '✔️ Success', 'details': message}, QColor(46, 125, 50, 230))
+        self._show_toast({'title': '✅ Success', 'details': message}, QColor(46, 125, 50, 230))

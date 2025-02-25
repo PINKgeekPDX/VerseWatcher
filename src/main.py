@@ -6,22 +6,24 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                             QTextEdit, QFrame, QFileDialog, QTabWidget, QGroupBox,
                             QListWidget, QTreeWidget, QTreeWidgetItem, QSplitter,
                             QListWidgetItem, QComboBox, QCheckBox, QDialog, QScrollArea,
-                            QGridLayout, QMenu, QSystemTrayIcon, QAction, QStyle)
-from PyQt5.QtCore import Qt, QSettings, QUrl, QTimer
-from PyQt5.QtGui import QPalette, QColor, QIcon, QPixmap, QFont, QImage, QPainter
+                            QGridLayout)
+from PyQt5.QtCore import Qt, QSettings
+from PyQt5.QtGui import QPalette, QColor, QIcon
 import sip
 import datetime
 import logging
 import warnings
-from logging.handlers import RotatingFileHandler
-from PyQt5.QtGui import QDesktopServices
 
+# Suppress deprecation warnings for sip
 warnings.filterwarnings('ignore', category=DeprecationWarning)
+
+# Set SIP API version
 try:
     if hasattr(sip, 'setapi'):
         sip.setapi('QVariant', 2)
         sip.setapi('QString', 2)
 except Exception as e:
+    # Ignore deprecation warnings for sip API version setting
     pass
 
 from game_watcher import GameLogWatcher
@@ -33,91 +35,94 @@ class MainWindow(QMainWindow):
         super().__init__()
         print("MainWindow initialization started")
         
-        # Initialize state variables first
-        self.is_watching = False
-        
-        # Initialize tray icon
-        self.tray_icon = QSystemTrayIcon(self)
-        self.setup_tray_icon()
-        
-        # Initialize attributes
+        # Initialize attributes first
         self.party_members = []
         self.session_history = {}
         self.watcher = None
         self.console_output = None
         self.player_name = None  # Initialize player_name attribute
-        self.logger = None  # Initialize logger as None first
-        self.path_input = None  # Initialize UI elements as None
-        self.name_input = None
-        self.toast_position_combo = None
-        self.toast_size_combo = None
-        self.toast_duration_combo = None
-        self.self_events_check = None
-        self.other_events_check = None
-        self.npc_events_check = None
-        self.suicide_events_check = None
-        self.party_events_check = None
-        self.party_members_list = None
-        self.kill_list = None
-        self.kill_details = None
-        self.party_event_list = None
-        self.party_event_details = None
-        self.session_combo = None
         
         # Setup app directories
         self.app_dir = os.path.join(os.path.expanduser('~'), 'Documents', 'PINK', 'VerseWatcher')
         self.settings_file = os.path.join(self.app_dir, 'settings.json')
         self.logs_dir = os.path.join(self.app_dir, 'logs')
-        self.history_dir = os.path.join(self.app_dir, 'history')
+        self.history_dir = os.path.join(self.app_dir, 'history')  # Add history directory
         
         print("Creating directories...")
         # Create directories if they don't exist
         os.makedirs(self.app_dir, exist_ok=True)
         os.makedirs(self.logs_dir, exist_ok=True)
-        os.makedirs(self.history_dir, exist_ok=True)
+        os.makedirs(self.history_dir, exist_ok=True)  # Create history directory
         
         # Generate unique session ID for logs
         self.session_id = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
         self.log_file = os.path.join(self.logs_dir, f'log_{self.session_id}.txt')
         
-        # Initialize file logger first
-        try:
-            self.logger = Logger(log_file=self.log_file)
-            print("File logger initialized")
-        except Exception as e:
-            print(f"Error initializing file logger: {str(e)}")
-            import traceback
-            print(traceback.format_exc())
-        
+        # Load geometry BEFORE initializing UI
         self.load_window_geometry()
+        
         print("Initializing UI...")
+        # Initialize UI (this creates self.console_output and other UI elements)
         self.init_ui()
         
-        # Now that console_output exists, update logger with console widget
-        if self.console_output is not None:
-            try:
-                self.logger = Logger(self.console_output, log_file=self.log_file)
-                self.logger.log_info("Logger initialized with console widget")
-            except Exception as e:
-                print(f"Error updating logger with console widget: {str(e)}")
-                import traceback
-                print(traceback.format_exc())
-        
         print("Setting window properties...")
-        self.setWindowTitle('Verse Watcher - A Star Citizen Tool')
+        # Set window properties
+        self.setWindowTitle('VerseWatcher')
         self.setMinimumSize(900, 600)
+        
+        # Set application icon
+        try:
+            # Try multiple possible icon locations
+            possible_icon_paths = [
+                os.path.join(os.path.dirname(__file__), '..', 'vw.ico'),  # Source directory
+                os.path.join(os.path.dirname(sys.executable), 'vw.ico'),  # Executable directory
+                'vw.ico'  # Current directory
+            ]
+            
+            icon_set = False
+            for icon_path in possible_icon_paths:
+                if os.path.exists(icon_path):
+                    self.setWindowIcon(QIcon(icon_path))
+                    print(f"Window icon set from: {icon_path}")
+                    icon_set = True
+                    break
+                    
+            if not icon_set:
+                print("Could not find vw.ico in any of the expected locations")
+        except Exception as e:
+            print(f"Error setting window icon: {str(e)}")
+        
+        print("Creating settings tab...")
+        # Add settings tab after UI initialization
+        settings_tab = self.create_settings_tab()
+        self.tabs.addTab(settings_tab, "⚙️ Settings")
+        
+        print("Initializing settings...")
+        # Initialize settings
+        self.settings = QSettings('VerseWatcher', 'VerseWatcher')
+        
+        # Load the actual saved values if they exist
+        path = self.settings.value('game_path', '')
+        name = self.settings.value('player_name', '')
+        
+        if path:
+            self.path_input.setText(path)
+        
+        if name:
+            self.name_input.setText(name)
+            
         print("Initializing managers...")
+        # Initialize managers with proper log file
         self.toast_manager = ToastManager()
+        self.toast_manager.update_config(
+            position=self.toast_position_combo.currentText(),
+            size=self.toast_size_combo.currentText(),
+            duration=int(self.toast_duration_combo.currentText().split()[0]) * 1000
+        )
+        self.logger = Logger(self.console_output, log_file=self.log_file)
+        
+        # Load remaining settings
         self.load_settings()
-        
-        # Update toast manager configuration
-        if self.toast_position_combo and self.toast_size_combo and self.toast_duration_combo:
-            self.toast_manager.update_config(
-                position=self.toast_position_combo.currentText(),
-                size=self.toast_size_combo.currentText(),
-                duration=int(self.toast_duration_combo.currentText().split()[0]) * 1000
-            )
-        
         print("MainWindow initialization completed")
         
     def load_window_geometry(self):
@@ -182,34 +187,42 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(main_widget)
         layout.setSpacing(0)  
         layout.setContentsMargins(0, 0, 0, 0)  
+        
+        # Header section with app title
         print("Creating header...")
         header = QFrame()
         header.setObjectName("header")
-        header.setFixedHeight(55)
+        header.setFixedHeight(35)  # Reduced from 50
         header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(15, 15, 15, 15)
-        title_label = QLabel("VERSE WATCHER | alpha 1.0.1")
+        header_layout.setContentsMargins(10, 0, 10, 0)
+        
+        title_label = QLabel("VERSE WATCHER")
         title_label.setObjectName("titleLabel")
         header_layout.addWidget(title_label)
+        
         layout.addWidget(header)
         
         # Control panel (always visible)
         print("Creating control panel...")
         control_panel = QFrame()
         control_panel.setObjectName("controlPanel")
-        control_panel.setFixedHeight(50)
+        control_panel.setFixedHeight(40)  # Reduced from 60
         control_layout = QHBoxLayout(control_panel)
-        control_layout.setContentsMargins(12, 3, 12, 3)
-        status_label = QLabel("⛔️ STATUS: NOT MONITORING")
+        control_layout.setContentsMargins(10, 0, 10, 0)
+        
+        status_label = QLabel("◉ STATUS: NOT MONITORING")
         status_label.setObjectName("statusLabel")
         self.status_label = status_label
-        self.start_button = QPushButton('▶️️ START MONITORING')
+        
+        self.start_button = QPushButton('▶ START MONITORING')
         self.start_button.setObjectName("startButton")
         self.start_button.clicked.connect(self.toggle_watching)
         self.start_button.setToolTip("Start/Stop monitoring game events")
+        
         control_layout.addWidget(status_label)
         control_layout.addStretch()
         control_layout.addWidget(self.start_button)
+        
         layout.addWidget(control_panel)
         
         # Content area
@@ -219,61 +232,28 @@ class MainWindow(QMainWindow):
         content_layout = QVBoxLayout(content_area)
         content_layout.setContentsMargins(10, 10, 10, 10)
         content_layout.setSpacing(5)
-        # Tabs
+        
+        # Tab widget
         print("Creating tab widget...")
         self.tabs = QTabWidget()
         self.tabs.setObjectName("tabWidget")
-        
-        # Set tab bar to expand tabs
-        self.tabs.setStyleSheet("""
-            QTabWidget::pane {
-                border: 1px solid #00A6ED;
-                background: rgba(4, 11, 17, 0.98);
-                border-radius: 1px;
-            }
-            QTabBar::tab {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #040B11,
-                    stop:1 #0D1F2D
-                );
-                color: #00A6ED;
-                border: 1px solid #00A6ED;
-                padding: 9px 12px;
-                min-width: 148px;
-                border-radius: 1px;
-            }
-            QTabBar::tab:selected {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #003D5C,
-                    stop:1 #0077AA
-                );
-                color: white;
-            }
-            QTabBar::tab:hover:!selected {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #0A1721,
-                    stop:1 #152F3E
-                );
-            }
-        """)
         
         # Create and add tabs
         print("Creating tabs...")
         watcher_tab = self.create_watcher_tab()
         history_tab = self.create_history_tab()
         party_tab = self.create_party_tab()
-        settings_tab = self.create_settings_tab()
-        about_tab = self.create_about_tab()
-        self.tabs.addTab(watcher_tab, "👁‍🗨 Console")
-        self.tabs.addTab(history_tab, "🌌 Tracking")
-        self.tabs.addTab(party_tab, "👀 Party Tracking")
-        self.tabs.addTab(settings_tab, "⚙️ Settings")
-        self.tabs.addTab(about_tab, "❓ About")
-        self.tabs.tabBar().setExpanding(True)
+        
+        self.tabs.addTab(watcher_tab, "💻 Console")
+        self.tabs.addTab(history_tab, "📊 Tracking")
+        self.tabs.addTab(party_tab, "👥 Party/Teams")
+        
         content_layout.addWidget(self.tabs)
         layout.addWidget(content_area)
+        
         print("Applying theme...")
         self.apply_theme()
+        
         print("UI initialization completed")
         
     def apply_theme(self):
@@ -285,6 +265,7 @@ class MainWindow(QMainWindow):
                     stop:1 #0D1F2D
                 );
             }
+            
             #header {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 rgba(4, 11, 17, 0.95),
@@ -294,49 +275,56 @@ class MainWindow(QMainWindow):
                 border-bottom: 1px solid #00A6ED;
                 border-image: none;
                 padding: 2px;
-            }        
+            }
+            
             #titleLabel {
-                color: #E7E5E6;
+                color: #00A6ED;
                 font-size: 18px;
                 font-weight: 800;
-                letter-spacing: 8px;
+                letter-spacing: 3px;
             }
+            
             #controlPanel {
                 background: rgba(4, 11, 17, 0.98);
                 border-bottom: 1px solid #00A6ED;
                 border-image: none;
-                padding: 2px 10px;
-            }  
+                padding: 5px 10px;
+            }
+            
             #statusLabel {
-                color: #E7E5E6;
+                color: #00A6ED;
                 font-size: 12px;
                 font-weight: bold;
-                letter-spacing: 2px;
-            }            
+                letter-spacing: 1px;
+            }
+            
             #startButton {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 #003D5C,
                     stop:1 #0077AA
                 );
                 border: 1px solid #00A6ED;
-                border-radius: 5px;
+                border-radius: 2px;
                 color: white;
-                padding: 8px 10px;
+                padding: 8px 15px;
                 font-size: 12px;
                 font-weight: bold;
                 min-width: 150px;
-            }      
+            }
+            
             #startButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 #0077AA,
                     stop:1 #00A6ED
                 );
-                border: 2px solid #40C4FF;
+                border: 1px solid #40C4FF;
             }
+            
             QTabWidget::pane {
                 border: none;
                 background-color: transparent;
             }
+            
             QTabBar::tab {
                 background: rgba(4, 11, 17, 0.95);
                 border: none;
@@ -347,32 +335,37 @@ class MainWindow(QMainWindow):
                 font-size: 12px;
                 font-weight: bold;
                 letter-spacing: 1px;
-                margin-right: 1px;
+                margin-right: 2px;
             }
+            
             QTabBar::tab:selected {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #FE9E0F,
-                    stop:1 #4C3717
+                    stop:0 #003D5C,
+                    stop:1 #0077AA
                 );
-                border-bottom: 3px solid #00A6ED;
+                border-bottom: 1px solid #00A6ED;
                 color: white;
-            }      
+            }
+            
             QTabBar::tab:hover:!selected {
                 background: rgba(0, 166, 237, 0.15);
                 border-bottom: 1px solid #0077AA;
                 color: #40C4FF;
             }
+            
             #contentSection {
                 background-color: rgba(4, 11, 17, 0.98);
                 border: 1px solid #00A6ED;
                 border-radius: 2px;
                 padding: 8px;
                 margin: 4px 0;
-            }          
+            }
+            
             #contentSection:hover {
                 border: 1px solid #40C4FF;
                 background: rgba(4, 11, 17, 0.99);
             }
+            
             QListWidget, QTreeWidget {
                 background-color: rgba(4, 11, 17, 0.98);
                 border: 1px solid #00A6ED;
@@ -381,17 +374,20 @@ class MainWindow(QMainWindow):
                 font-size: 12px;
                 padding: 4px;
             }
+            
             QListWidget::item, QTreeWidget::item {
                 padding: 4px 8px;
                 border-radius: 2px;
                 margin: 1px 0;
                 border: 1px solid transparent;
             }
+            
             QListWidget::item:hover, QTreeWidget::item:hover {
                 background: rgba(0, 166, 237, 0.15);
                 color: #40C4FF;
                 border: 1px solid #0077AA;
-            }       
+            }
+            
             QListWidget::item:selected, QTreeWidget::item:selected {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 #003D5C,
@@ -399,13 +395,15 @@ class MainWindow(QMainWindow):
                 );
                 color: white;
                 border: 1px solid #00A6ED;
-            }    
+            }
+            
             QScrollBar:vertical {
                 background-color: rgba(4, 11, 17, 0.98);
                 width: 8px;
                 margin: 0;
                 border-radius: 4px;
-            }         
+            }
+            
             QScrollBar::handle:vertical {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 #003D5C,
@@ -413,13 +411,15 @@ class MainWindow(QMainWindow):
                 );
                 min-height: 20px;
                 border-radius: 4px;
-            }            
+            }
+            
             QScrollBar::handle:vertical:hover {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 #0077AA,
                     stop:1 #00A6ED
                 );
-            }           
+            }
+            
             QComboBox {
                 background: rgba(4, 11, 17, 0.98);
                 border: 1px solid #00A6ED;
@@ -428,27 +428,32 @@ class MainWindow(QMainWindow):
                 padding: 4px 8px;
                 min-width: 120px;
                 font-size: 12px;
-            }          
+            }
+            
             QComboBox:hover {
                 border: 1px solid #40C4FF;
                 color: #40C4FF;
                 background: rgba(4, 11, 17, 0.99);
-            }         
+            }
+            
             QComboBox::drop-down {
                 border: none;
                 width: 20px;
-            }         
+            }
+            
             QComboBox::down-arrow {
                 image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQgNkw4IDEwTDEyIDYiIHN0cm9rZT0iIzJiN2FmZiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+);
                 width: 12px;
                 height: 12px;
-            }       
+            }
+            
             QComboBox QAbstractItemView {
                 background-color: rgba(4, 11, 17, 0.98);
                 border: 1px solid #00A6ED;
                 selection-background-color: #0077AA;
                 selection-color: white;
-            }          
+            }
+            
             QLineEdit {
                 background: rgba(4, 11, 17, 0.98);
                 border: 1px solid #00A6ED;
@@ -456,14 +461,17 @@ class MainWindow(QMainWindow):
                 color: #FFFFFF;
                 padding: 6px 10px;
                 font-size: 12px;
-            }          
+            }
+            
             QLineEdit:focus {
                 border: 1px solid #40C4FF;
                 background: rgba(4, 11, 17, 0.99);
-            }        
+            }
+            
             QLineEdit:hover {
                 border: 1px solid #40C4FF;
-            }           
+            }
+            
             #consoleOutput {
                 background-color: rgba(4, 11, 17, 0.98);
                 border: 1px solid #00A6ED;
@@ -473,25 +481,30 @@ class MainWindow(QMainWindow):
                 font-size: 12px;
                 padding: 8px;
                 line-height: 1.2;
-            }           
+            }
+            
             #consoleOutput:focus {
                 border: 1px solid #40C4FF;
-            }          
+            }
+            
             #sectionHeader {
                 color: #00A6ED;
                 font-size: 14px;
                 font-weight: bold;
                 letter-spacing: 1px;
                 margin-bottom: 4px;
-            }          
+            }
+            
             QSplitter::handle {
                 background: #00A6ED;
                 width: 1px;
                 margin: 1px;
-            }         
+            }
+            
             QSplitter::handle:hover {
                 background: #40C4FF;
-            }        
+            }
+            
             QHeaderView::section {
                 background: rgba(4, 11, 17, 0.98);
                 color: #00A6ED;
@@ -499,20 +512,24 @@ class MainWindow(QMainWindow):
                 border: 1px solid #00A6ED;
                 font-size: 12px;
                 font-weight: bold;
-            }           
+            }
+            
             QHeaderView::section:hover {
                 background: rgba(0, 166, 237, 0.15);
                 color: #40C4FF;
-            }      
+            }
+            
             QGroupBox {
                 font-size: 12px;
                 padding-top: 16px;
                 margin-top: 4px;
-            }       
+            }
+            
             QGroupBox::title {
                 color: #00A6ED;
                 padding: 0 3px;
-            }            
+            }
+            
             #actionButton {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 #003D5C,
@@ -525,14 +542,16 @@ class MainWindow(QMainWindow):
                 font-size: 12px;
                 font-weight: bold;
                 min-width: 120px;
-            }            
+            }
+            
             #actionButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 #0077AA,
                     stop:1 #00A6ED
                 );
                 border: 1px solid #40C4FF;
-            }            
+            }
+            
             #actionButton:pressed {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 #00A6ED,
@@ -543,152 +562,69 @@ class MainWindow(QMainWindow):
         """)
         
     def toggle_watching(self):
-        """Handle starting/stopping the game log watcher"""
         try:
-            # Check if required UI elements exist
-            if not all([self.path_input, self.name_input]):
-                print("Error: UI elements not initialized")
-                return
-            # Ensure logger exists
-            if not self.logger:
-                print("Creating fallback logger...")
-                self.logger = Logger(log_file=self.log_file)
-            
             if self.watcher is None:
-                # Starting watcher
-                try:
-                    # Validate inputs
-                    game_path = self.path_input.text().strip()
-                    player_name = self.name_input.text().strip()
+                game_path = self.path_input.text()
+                player_name = self.name_input.text()
+                
+                if not game_path or not player_name:
+                    self.logger.error("Please set both Game Path and Player Name")
+                    return
                     
-                    if not game_path or not player_name:
-                        self.logger.log_error("Please set both Game Path and Player Name")
-                        return
+                if not os.path.exists(game_path):
+                    self.logger.error(f"Game directory does not exist: {game_path}")
+                    return
+
+                game_log = os.path.join(game_path, 'Game.log')
+                if not os.path.exists(game_log):
+                    self.logger.error(f"Game.log not found in directory: {game_path}")
+                    return
+                
+                # Set player name BEFORE creating watcher
+                self.player_name = player_name
                     
-                    if not os.path.exists(game_path):
-                        self.logger.log_error(f"Game directory does not exist: {game_path}")
-                        return
-                    
-                    game_log = os.path.join(game_path, 'Game.log')
-                    if not os.path.exists(game_log):
-                        self.logger.log_error(f"Game.log not found in directory: {game_path}")
-                        return
-                    
-                    # Set player name and create watcher
-                    self.player_name = player_name
-                    self.watcher = GameLogWatcher(
-                        game_path=game_path,
-                        player_name=player_name,
-                        logger=self.logger,
-                        toast_manager=self.toast_manager,
-                        main_window=self
-                    )
-                    
-                    # Start watching
-                    if self.watcher.start():
-                        self.start_button.setText('🛑 STOP MONITORING')
-                        self.start_button.setStyleSheet("""
-                            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                                stop:0 #c62828,
-                                stop:1 #ff5252
-                            );
-                            color: white;
-                            border: none;
-                        """)
-                        self.status_label.setText("✔️ STATUS: MONITORING")
-                        self.status_label.setStyleSheet("color: #4caf50;")
-                        self.logger.log_info(f"Started watching Game.log at: {game_log}")
-                        # Update tray icon state
-                        self.is_watching = True
-                        self.watcher_action.setText("Stop Watcher")
-                        self.update_tray_icon()
-                    else:
-                        self.watcher = None
-                        self.player_name = None
-                        self.logger.log_error("Failed to start watching Game.log")
-                        # Update tray icon state
-                        self.is_watching = False
-                        self.watcher_action.setText("Start Watcher")
-                        self.update_tray_icon()
-                    
-                except Exception as e:
-                    error_msg = f"Error starting watcher: {str(e)}"
-                    print(error_msg)
-                    if self.logger:
-                        self.logger.log_error(error_msg)
-                        import traceback
-                        self.logger.log_error(traceback.format_exc())
+                self.watcher = GameLogWatcher(
+                    game_path=game_path,
+                    player_name=player_name,
+                    logger=self.logger,
+                    toast_manager=self.toast_manager,
+                    main_window=self
+                )
+                
+                if self.watcher.start():
+                    self.start_button.setText('■ STOP MONITORING')
+                    self.start_button.setStyleSheet("""
+                        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                            stop:0 #c62828,
+                            stop:1 #ff5252
+                        );
+                        color: white;
+                        border: none;
+                    """)
+                    self.status_label.setText("◉ STATUS: MONITORING")
+                    self.status_label.setStyleSheet("color: #4caf50;")
+                    self.logger.info(f"Started watching Game.log at: {game_log}")
+                else:
                     self.watcher = None
-                    self.player_name = None
-                    # Update tray icon state
-                    self.is_watching = False
-                    self.watcher_action.setText("Start Watcher")
-                    self.update_tray_icon()
+                    self.player_name = None  # Clear player name if watcher fails to start
             else:
-                # Stopping watcher
-                try:
-                    if self.watcher:
-                        self.watcher.stop()
-                    self.watcher = None
-                    self.player_name = None
-                    self.start_button.setText('▶️️ START MONITORING')
-                    self.start_button.setStyleSheet("")
-                    self.status_label.setText("⛔️ STATUS: NOT MONITORING")
-                    self.status_label.setStyleSheet("")
-                    if self.logger:
-                        self.logger.log_info("Stopped watching Game.log")
-                    # Update tray icon state
-                    self.is_watching = False
-                    self.watcher_action.setText("Start Watcher")
-                    self.update_tray_icon()
-                    
-                except Exception as e:
-                    error_msg = f"Error stopping watcher: {str(e)}"
-                    print(error_msg)
-                    if self.logger:
-                        self.logger.log_error(error_msg)
-                        import traceback
-                        self.logger.log_error(traceback.format_exc())
-                    self.watcher = None
-                    self.player_name = None
-                    # Update tray icon state
-                    self.is_watching = False
-                    self.watcher_action.setText("Start Watcher")
-                    self.update_tray_icon()
-            
-        except KeyboardInterrupt:
-            # Handle keyboard interrupt gracefully
-            if self.watcher:
                 self.watcher.stop()
-            self.watcher = None
-            self.player_name = None
-            self.start_button.setText('▶️ START MONITORING')
-            self.start_button.setStyleSheet("")
-            self.status_label.setText("⛔️ STATUS: NOT MONITORING")
-            self.status_label.setStyleSheet("")
-            if self.logger:
-                self.logger.log_info("Monitoring stopped by user")
-            # Update tray icon state
-            self.is_watching = False
-            self.watcher_action.setText("Start Watcher")
-            self.update_tray_icon()
+                self.watcher = None
+                self.player_name = None  # Clear player name when stopping
+                self.start_button.setText('▶ START MONITORING')
+                self.start_button.setStyleSheet("")
+                self.status_label.setText("◉ STATUS: NOT MONITORING")
+                self.status_label.setStyleSheet("")
+                self.logger.info("Stopped watching Game.log")
                 
         except Exception as e:
-            error_msg = f"Critical error in toggle_watching: {str(e)}"
-            print(error_msg)
-            if hasattr(self, 'logger') and self.logger:
-                self.logger.log_error(error_msg)
-                import traceback
-                self.logger.log_error(traceback.format_exc())
-            if hasattr(self, 'toast_manager'):
-                self.toast_manager.show_error_toast(f"Error: {str(e)}")
+            self.logger.error(f"Error in toggle_watching: {str(e)}")
+            import traceback
+            self.logger.error(traceback.format_exc())
+            self.toast_manager.show_error_toast(f"Error: {str(e)}")
             self.watcher = None
-            self.player_name = None
-            # Update tray icon state
-            self.is_watching = False
-            self.watcher_action.setText("Start Watcher")
-            self.update_tray_icon()
-        
+            self.player_name = None  # Clear player name on error
+            
     def browse_game_path(self):
         """Handle browsing for game directory"""
         try:
@@ -702,9 +638,9 @@ class MainWindow(QMainWindow):
                     self.path_input.setText(path)
                     self.save_settings()
         except Exception as e:
-            self.logger.log_error(f"Error in browse_game_path: {str(e)}")
+            self.logger.error(f"Error in browse_game_path: {str(e)}")
             import traceback
-            self.logger.log_error(traceback.format_exc())
+            self.logger.error(traceback.format_exc())
             self.toast_manager.show_error_toast(f"Error: {str(e)}")
         
     def on_path_input_change(self, text):
@@ -716,9 +652,9 @@ class MainWindow(QMainWindow):
                 self.path_input.setPlaceholderText('Select directory containing Game.log')
             self.save_settings()
         except Exception as e:
-            self.logger.log_error(f"Error in on_path_input_change: {str(e)}")
+            self.logger.error(f"Error in on_path_input_change: {str(e)}")
             import traceback
-            self.logger.log_error(traceback.format_exc())
+            self.logger.error(traceback.format_exc())
             self.toast_manager.show_error_toast(f"Error: {str(e)}")
 
     def on_name_input_change(self, text):
@@ -730,9 +666,9 @@ class MainWindow(QMainWindow):
                 self.name_input.setPlaceholderText('Your in-game playername (case sensitive!)')
             self.save_settings()
         except Exception as e:
-            self.logger.log_error(f"Error in on_name_input_change: {str(e)}")
+            self.logger.error(f"Error in on_name_input_change: {str(e)}")
             import traceback
-            self.logger.log_error(traceback.format_exc())
+            self.logger.error(traceback.format_exc())
             self.toast_manager.show_error_toast(f"Error: {str(e)}")
             
     def save_settings(self):
@@ -769,9 +705,9 @@ class MainWindow(QMainWindow):
                 json.dump(self.settings, f, indent=4)
                 
         except Exception as e:
-            self.logger.log_error(f"Error saving settings: {str(e)}")
+            self.logger.error(f"Error saving settings: {str(e)}")
             import traceback
-            self.logger.log_error(traceback.format_exc())
+            self.logger.error(traceback.format_exc())
             self.toast_manager.show_error_toast(f"Error: {str(e)}")
             
     def load_settings(self):
@@ -865,18 +801,14 @@ class MainWindow(QMainWindow):
                 self.load_session_histories()
                 
         except Exception as e:
-            self.logger.log_error(f"Error loading settings: {str(e)}")
+            self.logger.error(f"Error loading settings: {str(e)}")
             import traceback
-            self.logger.log_error(traceback.format_exc())
+            self.logger.error(traceback.format_exc())
             self.toast_manager.show_error_toast(f"Error: {str(e)}")
             
     def closeEvent(self, event):
         """Save settings when closing the application"""
         try:
-            # Hide the tray icon before closing
-            if hasattr(self, 'tray_icon'):
-                self.tray_icon.hide()
-            
             # Get current window geometry BEFORE closing
             geometry = self.geometry()
             
@@ -955,22 +887,22 @@ class MainWindow(QMainWindow):
             timestamp = event_data.get('timestamp', '')
             
             if is_suicide:
-                item_text = f"🚫 {timestamp} - {vname} committed suicide"
+                item_text = f"💥 {timestamp} - {vname} committed suicide"
                 event_data['type'] = 'suicide'
             elif is_npc:
                 if 'NPC' in vname:
-                    item_text = f"👾 {timestamp} - NPC killed by {kname}"
+                    item_text = f"🤖 {timestamp} - NPC killed by {kname}"
                 else:
-                    item_text = f"👾 {timestamp} - {vname} killed by NPC"
+                    item_text = f"🤖 {timestamp} - {vname} killed by NPC"
                 event_data['type'] = 'npc'
             elif vname == self.player_name:
-                item_text = f"💀 {timestamp} - Killed by {kname}"
+                item_text = f"🔴 {timestamp} - Killed by {kname}"
                 event_data['type'] = 'death'
             elif kname == self.player_name:
-                item_text = f"😈 {timestamp} - Killed {vname}"
+                item_text = f"🟢 {timestamp} - Killed {vname}"
                 event_data['type'] = 'kill'
             else:
-                item_text = f"☠️ {timestamp} - {vname} killed by {kname}"
+                item_text = f"⚪ {timestamp} - {vname} killed by {kname}"
                 event_data['type'] = 'info'
             
             # Add to appropriate list based on event type
@@ -979,33 +911,26 @@ class MainWindow(QMainWindow):
                 item.setData(Qt.UserRole, event_data)
                 self.party_event_list.insertItem(0, item)
                 self.party_event_list.setCurrentItem(item)
-                
-                # Update party event details
-                self.on_party_event_selected(item, None)
-            
-            # Always add to main kill list
-            item = QListWidgetItem(item_text)
-            item.setData(Qt.UserRole, event_data)
-            self.kill_list.insertItem(0, item)
-            self.kill_list.setCurrentItem(item)
+            else:
+                item = QListWidgetItem(item_text)
+                item.setData(Qt.UserRole, event_data)
+                self.kill_list.insertItem(0, item)
+                self.kill_list.setCurrentItem(item)
             
             # Update session history
             if update_session:
-                current_date = datetime.datetime.now().strftime('%Y%m%d')
-                current_hour = datetime.datetime.now().strftime('%H')
-                session_key = f"{current_date} {current_hour}:00"
+                current_session = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                if current_session not in self.session_history:
+                    self.session_history[current_session] = []
+                    self.session_combo.addItem(current_session)
+                    self.session_combo.setCurrentText(current_session)
                 
-                if session_key not in self.session_history:
-                    self.session_history[session_key] = []
-                    self.session_combo.addItem(session_key)
-                    self.session_combo.setCurrentText(session_key)
-                
-                self.session_history[session_key].append(event_data)
+                self.session_history[current_session].append(event_data)
                 # Save session to file
-                self.save_session_history(session_key, [event_data])
+                self.save_session_history(current_session, self.session_history[current_session])
             
         except Exception as e:
-            self.logger.log_error(f"Error adding kill event to history: {str(e)}")
+            self.logger.error(f"Error adding kill event to history: {str(e)}")
             
     def on_kill_selected(self, current, previous):
         """Update kill details when a kill is selected"""
@@ -1024,10 +949,11 @@ class MainWindow(QMainWindow):
             fields = [
                 ("Timestamp", 'timestamp', '🕒'),
                 ("Victim", 'vname', '💀'),
-                ("Killer", 'kname', '😈'),
+                ("Killer", 'kname', '🎯'),
                 ("Weapon", 'kwep', '🔫'),
                 ("Ship", 'vship', '🚀'),
-                ("Damage Type", 'dtype', '💥')
+                ("Damage Type", 'dtype', '💥'),
+                ("Direction", 'direction', '📍')
             ]
             
             for label, key, emoji in fields:
@@ -1038,7 +964,7 @@ class MainWindow(QMainWindow):
             self.kill_details.expandAll()
             
         except Exception as e:
-            self.logger.log_error(f"Error updating kill details: {str(e)}")
+            self.logger.error(f"Error updating kill details: {str(e)}")
 
     def create_settings_tab(self):
         """Create the settings tab with scrollable content"""
@@ -1379,14 +1305,14 @@ class MainWindow(QMainWindow):
                 duration=int(self.toast_duration_combo.currentText().split()[0]) * 1000
             )
         except Exception as e:
-            self.logger.log_error(f"Error updating toast config: {str(e)}")
+            self.logger.error(f"Error updating toast config: {str(e)}")
             
     def on_event_filter_changed(self):
         """Handle changes to event filters"""
         try:
             self.save_settings()
         except Exception as e:
-            self.logger.log_error(f"Error updating event filters: {str(e)}")
+            self.logger.error(f"Error updating event filters: {str(e)}")
 
     def show_add_member_dialog(self):
         """Show dialog to add party member"""
@@ -1495,7 +1421,7 @@ class MainWindow(QMainWindow):
             dialog.exec_()
             
         except Exception as e:
-            self.logger.log_error(f"Error showing add member dialog: {str(e)}")
+            self.logger.error(f"Error showing add member dialog: {str(e)}")
             
     def add_party_member(self, name, dialog):
         """Add a new party member"""
@@ -1515,7 +1441,7 @@ class MainWindow(QMainWindow):
             dialog.accept()
             
         except Exception as e:
-            self.logger.log_error(f"Error adding party member: {str(e)}")
+            self.logger.error(f"Error adding party member: {str(e)}")
             
     def remove_party_member(self):
         """Remove selected party member"""
@@ -1532,7 +1458,7 @@ class MainWindow(QMainWindow):
             self.toast_manager.show_info_toast(f"Removed {name} from party")
             
         except Exception as e:
-            self.logger.log_error(f"Error removing party member: {str(e)}")
+            self.logger.error(f"Error removing party member: {str(e)}")
             
     def show_clear_history_dialog(self):
         """Show confirmation dialog for clearing history"""
@@ -1540,95 +1466,30 @@ class MainWindow(QMainWindow):
             dialog = QDialog(self)
             dialog.setWindowTitle("Clear History")
             dialog.setModal(True)
-            dialog.setMinimumWidth(400)
-            dialog.setStyleSheet("""
-                QDialog {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                        stop:0 #040B11,
-                        stop:0.5 #0A1721,
-                        stop:1 #0D1F2D
-                    );
-                    border: 1px solid #00A6ED;
-                    border-radius: 4px;
-                }
-                QLabel {
-                    color: #FFFFFF;
-                    font-size: 13px;
-                    padding: 10px;
-                    background: transparent;
-                }
-                QPushButton {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                        stop:0 #003D5C,
-                        stop:1 #0077AA
-                    );
-                    border: 1px solid #00A6ED;
-                    border-radius: 2px;
-                    color: white;
-                    padding: 8px 15px;
-                    font-size: 12px;
-                    font-weight: bold;
-                    min-width: 100px;
-                }
-                QPushButton:hover {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                        stop:0 #0077AA,
-                        stop:1 #00A6ED
-                    );
-                    border: 1px solid #40C4FF;
-                }
-                #warningLabel {
-                    color: #FF4444;
-                    font-weight: bold;
-                }
-            """)
             
             layout = QVBoxLayout(dialog)
-            layout.setSpacing(15)
-            layout.setContentsMargins(20, 20, 20, 20)
             
-            # Warning icon and message
-            warning_label = QLabel("⚠️ Warning")
-            warning_label.setObjectName("warningLabel")
-            warning_label.setAlignment(Qt.AlignCenter)
-            layout.addWidget(warning_label)
-            
-            message = QLabel(
-                "You are about to permanently delete all stored history data.\n\n"
-                "This includes:\n"
-                "• All session records\n"
-                "• All event logs\n"
-                "• All tracking statistics\n\n"
-                "This action cannot be undone. Are you sure you want to proceed?"
-            )
-            message.setWordWrap(True)
-            message.setAlignment(Qt.AlignCenter)
+            message = QLabel("Are you sure you want to clear all history?\nThis cannot be undone.")
+            message.setObjectName("sectionLabel")
             layout.addWidget(message)
             
             button_layout = QHBoxLayout()
-            button_layout.setSpacing(10)
             
-            clear_button = QPushButton("Clear History")
-            clear_button.setStyleSheet("""
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #c62828,
-                    stop:1 #ff5252
-                );
-                border: 1px solid #ff5252;
-            """)
+            clear_button = QPushButton("Clear")
+            clear_button.setObjectName("startButton")
             clear_button.clicked.connect(lambda: self.clear_history(dialog))
             
             cancel_button = QPushButton("Cancel")
             cancel_button.clicked.connect(dialog.reject)
             
-            button_layout.addWidget(cancel_button)
             button_layout.addWidget(clear_button)
+            button_layout.addWidget(cancel_button)
             layout.addLayout(button_layout)
             
             dialog.exec_()
             
         except Exception as e:
-            self.logger.log_error(f"Error showing clear history dialog: {str(e)}")
+            self.logger.error(f"Error showing clear history dialog: {str(e)}")
             
     def clear_history(self, dialog):
         """Clear all session history"""
@@ -1637,14 +1498,12 @@ class MainWindow(QMainWindow):
             self.session_history = {}
             
             # Delete all history files
-            history_files = [f for f in os.listdir(self.history_dir) if f.startswith('vw_history_') and f.endswith('.txt')]
-            for filename in history_files:
-                try:
-                    file_path = os.path.join(self.history_dir, filename)
-                    os.remove(file_path)
-                    self.logger.log_info(f"Deleted history file: {filename}")
-                except Exception as e:
-                    self.logger.log_error(f"Error deleting history file {filename}: {str(e)}")
+            for filename in os.listdir(self.history_dir):
+                if filename.startswith('session_') and filename.endswith('.json'):
+                    try:
+                        os.remove(os.path.join(self.history_dir, filename))
+                    except Exception as e:
+                        self.logger.error(f"Error deleting history file {filename}: {str(e)}")
             
             # Clear all event lists and details
             self.kill_list.clear()
@@ -1653,11 +1512,11 @@ class MainWindow(QMainWindow):
             self.party_event_details.clear()
             self.session_combo.clear()
             
-            self.toast_manager.show_success_toast("History cleared successfully")
+            self.toast_manager.show_info_toast("History cleared")
             dialog.accept()
             
         except Exception as e:
-            self.logger.log_error(f"Error clearing history: {str(e)}")
+            self.logger.error(f"Error clearing history: {str(e)}")
             
     def on_session_changed(self, session_text):
         """Load events from selected session"""
@@ -1676,7 +1535,7 @@ class MainWindow(QMainWindow):
                 self.add_kill_event(event, update_session=False)
                 
         except Exception as e:
-            self.logger.log_error(f"Error changing session: {str(e)}")
+            self.logger.error(f"Error changing session: {str(e)}")
             
     def on_party_event_selected(self, current, previous):
         """Update party event details when an event is selected"""
@@ -1695,10 +1554,11 @@ class MainWindow(QMainWindow):
             fields = [
                 ("Timestamp", 'timestamp', '🕒'),
                 ("Victim", 'vname', '💀'),
-                ("Killer", 'kname', '😈'),
+                ("Killer", 'kname', '🎯'),
                 ("Weapon", 'kwep', '🔫'),
                 ("Ship", 'vship', '🚀'),
-                ("Damage Type", 'dtype', '💥')
+                ("Damage Type", 'dtype', '💥'),
+                ("Direction", 'direction', '📍')
             ]
             
             for label, key, emoji in fields:
@@ -1708,487 +1568,50 @@ class MainWindow(QMainWindow):
                     
             self.party_event_details.expandAll()
             
-            # Add double-click and context menu functionality
-            self.party_event_details.itemDoubleClicked.connect(self.on_party_details_double_clicked)
-            self.party_event_details.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.party_event_details.customContextMenuRequested.connect(self.show_party_details_context_menu)
-            
         except Exception as e:
-            self.logger.log_error(f"Error updating party event details: {str(e)}")
-
-    def on_party_details_double_clicked(self, item, column):
-        """Handle double-click events on party event details"""
-        try:
-            if not item or column != 1:  # Only handle clicks on the value column
-                return
-                
-            field = item.text(0)
-            value = item.text(1)
-            
-            if field in ["💀 Victim", "😈 Killer"]:
-                if 'NPC' in value:
-                    self.toast_manager.show_info_toast("No dossier available for NPC")
-                else:
-                    self.open_dossier(value)
-                    
-            elif field == "🚀 Ship":
-                ship_name = value
-                url = f"https://www.spviewer.eu/performance?ship={ship_name}"
-                QDesktopServices.openUrl(QUrl(url))
-                
-        except Exception as e:
-            self.logger.log_error(f"Error handling party details double-click: {str(e)}")
-
-    def show_party_details_context_menu(self, position):
-        """Show context menu for party event details"""
-        try:
-            item = self.party_event_details.itemAt(position)
-            if not item:
-                return
-                
-            field = item.text(0)
-            value = item.text(1)
-            
-            if field in ["💀 Victim", "😈 Killer"]:
-                menu = QMenu()
-                
-                if 'NPC' in value:
-                    action = menu.addAction("No dossier available")
-                    action.setEnabled(False)
-                else:
-                    action = menu.addAction("View Dossier")
-                    action.triggered.connect(lambda: self.open_dossier(value))
-                    
-                menu.exec_(self.party_event_details.viewport().mapToGlobal(position))
-                
-        except Exception as e:
-            self.logger.log_error(f"Error showing party details context menu: {str(e)}")
-
-    def create_about_tab(self):
-        """Create the about tab with app information"""
-        print("Creating about tab...")
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        
-        # Create a scroll area for content
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setStyleSheet("""
-            QScrollArea {
-                border: none;
-                background: transparent;
-            }
-            QScrollArea > QWidget > QWidget {
-                background: transparent;
-            }
-        """)
-        
-        # Create content widget
-        content = QWidget()
-        content_layout = QVBoxLayout(content)
-        content_layout.setContentsMargins(40, 40, 40, 40)
-        content_layout.setSpacing(30)
-        
-        # Header section with logos
-        header_widget = QFrame()
-        header_widget.setObjectName("aboutHeader")
-        header_widget.setStyleSheet("""
-            #aboutHeader {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 rgba(4, 11, 17, 0.8),
-                    stop:0.5 rgba(10, 23, 33, 0.8),
-                    stop:1 rgba(13, 31, 45, 0.8)
-                );
-                border: 1px solid #00A6ED;
-                border-radius: 10px;
-                padding: 20px;
-            }
-        """)
-        header_layout = QHBoxLayout(header_widget)
-        header_layout.setContentsMargins(20, 20, 20, 20)
-        header_layout.setSpacing(30)
-        
-        # App logo
-        logo_frame = QFrame()
-        logo_frame.setObjectName("logoFrame")
-        logo_frame.setStyleSheet("""
-            #logoFrame {
-                background: rgba(0, 166, 237, 0.1);
-                border: 2px solid #00A6ED;
-                border-radius: 10px;
-            }
-        """)
-        logo_layout = QVBoxLayout(logo_frame)
-        logo_size = 128
-        
-        logo_label = QLabel()
-        try:
-            possible_icon_paths = [
-                os.path.join(os.path.dirname(__file__), '..', 'vw.ico'),
-                os.path.join(os.path.dirname(sys.executable), 'vw.ico'),
-                'vw.ico'
-            ]
-            
-            icon_found = False
-            for icon_path in possible_icon_paths:
-                if os.path.exists(icon_path):
-                    logo = QIcon(icon_path)
-                    logo_label.setPixmap(logo.pixmap(logo_size, logo_size))
-                    icon_found = True
-                    break
-                    
-            if not icon_found:
-                logo_label.setText("VW")
-                logo_label.setStyleSheet("""
-                    color: #00A6ED;
-                    font-size: 48px;
-                    font-weight: bold;
-                """)
-        except Exception as e:
-            print(f"Error setting logo: {str(e)}")
-            logo_label.setText("VW")
-            logo_label.setStyleSheet("""
-                color: #00A6ED;
-                font-size: 48px;
-                font-weight: bold;
-            """)
-            
-        logo_label.setFixedSize(logo_size, logo_size)
-        logo_label.setAlignment(Qt.AlignCenter)
-        logo_layout.addWidget(logo_label)
-        header_layout.addWidget(logo_frame)
-        
-        # Developer logo/profile
-        dev_frame = QFrame()
-        dev_frame.setObjectName("devFrame")
-        dev_frame.setStyleSheet("""
-            #devFrame {
-                background: rgba(0, 166, 237, 0.1);
-                border: 2px solid #00A6ED;
-                border-radius: 10px;
-            }
-        """)
-        dev_layout = QVBoxLayout(dev_frame)
-        
-        dev_label = QLabel()
-        try:
-            dev_pic_path = os.path.join(os.path.dirname(__file__), '..', 'pg.png')
-            if os.path.exists(dev_pic_path):
-                dev_label.setPixmap(QIcon(dev_pic_path).pixmap(logo_size, logo_size))
-            else:
-                dev_label.setText("PINK")
-                dev_label.setStyleSheet("""
-                    color: #00A6ED;
-                    font-size: 48px;
-                    font-weight: bold;
-                """)
-        except Exception as e:
-            print(f"Error setting dev pic: {str(e)}")
-            dev_label.setText("PINK")
-            dev_label.setStyleSheet("""
-                color: #00A6ED;
-                font-size: 48px;
-                font-weight: bold;
-            """)
-            
-        dev_label.setFixedSize(logo_size, logo_size)
-        dev_label.setAlignment(Qt.AlignCenter)
-        dev_layout.addWidget(dev_label)
-        
-        header_layout.addWidget(dev_frame)
-        header_layout.addStretch()
-        content_layout.addWidget(header_widget)
-        
-        # App info section
-        info_widget = QFrame()
-        info_widget.setObjectName("aboutInfo")
-        info_widget.setStyleSheet("""
-            #aboutInfo {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 rgba(4, 11, 17, 0.8),
-                    stop:0.5 rgba(10, 23, 33, 0.8),
-                    stop:1 rgba(13, 31, 45, 0.8)
-                );
-                border: 1px solid #00A6ED;
-                border-radius: 10px;
-                padding: 20px;
-            }
-        """)
-        info_layout = QVBoxLayout(info_widget)
-        info_layout.setSpacing(15)
-        
-        # Title and version
-        title_label = QLabel("VERSE WATCHER")
-        title_label.setStyleSheet("""
-            font-size: 32px;
-            font-weight: bold;
-            color: #00A6ED;
-        """)
-        title_label.setAlignment(Qt.AlignCenter)
-        info_layout.addWidget(title_label)
-        
-        version_label = QLabel("Version 1.0.0 alpha")
-        version_label.setStyleSheet("""
-            font-size: 16px;
-            color: #90CAF9;
-        """)
-        version_label.setAlignment(Qt.AlignCenter)
-        info_layout.addWidget(version_label)
-        
-        # Description
-        desc_label = QLabel(
-            "A real-time game.log monitoring tool for Star Citizen"
-        )
-        desc_label.setWordWrap(True)
-        desc_label.setStyleSheet("""
-            font-size: 14px;
-            color: #FFFFFF;
-            line-height: 1.6;
-        """)
-        desc_label.setAlignment(Qt.AlignCenter)
-        info_layout.addWidget(desc_label)
-        content_layout.addWidget(info_widget)
-        
-        # Links section
-        links_widget = QFrame()
-        links_widget.setObjectName("aboutLinks")
-        links_widget.setStyleSheet("""
-            #aboutLinks {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 rgba(4, 11, 17, 0.8),
-                    stop:0.5 rgba(10, 23, 33, 0.8),
-                    stop:1 rgba(13, 31, 45, 0.8)
-                );
-                border: 1px solid #00A6ED;
-                border-radius: 10px;
-                padding: 20px;
-            }
-        """)
-        links_layout = QVBoxLayout(links_widget)
-        links_layout.setSpacing(15)
-        
-        links_title = QLabel("Links & Resources")
-        links_title.setStyleSheet("""
-            font-size: 18px;
-            font-weight: bold;
-            color: #00A6ED;
-        """)
-        links_title.setAlignment(Qt.AlignCenter)
-        links_layout.addWidget(links_title)
-        
-        # Links with hover effects
-        link_style = """
-            QLabel {
-                font-size: 14px;
-                color: #90CAF9;
-                padding: 8px;
-                border-radius: 5px;
-            }
-            QLabel:hover {
-                color: #40C4FF;
-                background: rgba(0, 166, 237, 0.1);
-            }
-        """
-        
-        github_link = QLabel('<a href="https://github.com/PINKgeekPDX/VerseWatcher" style="color: inherit; text-decoration: none;">🔗 GitHub Repository</a>')
-        github_link.setOpenExternalLinks(True)
-        github_link.setStyleSheet(link_style)
-        github_link.setAlignment(Qt.AlignCenter)
-        links_layout.addWidget(github_link)
-        issues_link = QLabel('<a href="https://github.com/PINKgeekPDX/VerseWatcher/issues" style="color: inherit; text-decoration: none;">🐛 Report Issues</a>')
-        issues_link.setOpenExternalLinks(True)
-        issues_link.setStyleSheet(link_style)
-        issues_link.setAlignment(Qt.AlignCenter)
-        links_layout.addWidget(issues_link)
-        content_layout.addWidget(links_widget)
-
-        # Credits section
-        credits_widget = QFrame()
-        credits_widget.setObjectName("aboutCredits")
-        credits_widget.setStyleSheet("""
-            #aboutCredits {
-                background: rgba(4, 11, 17, 0.5);
-                border-radius: 10px;
-                padding: 20px;
-            }
-        """)
-        credits_layout = QVBoxLayout(credits_widget)
-        credits_layout.setSpacing(15)
-        credits_title = QLabel("Credits")
-        credits_title.setStyleSheet("""
-            font-size: 18px;
-            font-weight: bold;
-            color: #00A6ED;
-        """)
-        credits_title.setAlignment(Qt.AlignCenter)
-        credits_layout.addWidget(credits_title)
-        credits_text = QLabel(
-            "Developed by: {PINKgeekPDX}\n"
-            "Design: {PINKgeekPDX}\n"
-            "\n"
-            "Special thanks to the Star Citizen community for helping guide and test with the development of this tool!"
-        )
-        credits_text.setStyleSheet("""
-            font-size: 14px;
-            color: #FFFFFF;
-            line-height: 1.6;
-        """)
-        credits_text.setAlignment(Qt.AlignCenter)
-        credits_layout.addWidget(credits_text)
-        content_layout.addWidget(credits_widget)
-        content_layout.addStretch()
-        scroll.setWidget(content)
-        layout.addWidget(scroll)
-        print("About tab created")
-        return tab
+            self.logger.error(f"Error updating party event details: {str(e)}")
 
     def create_watcher_tab(self):
-        """Create and return the watcher tab"""
-        try:
-            tab = QWidget()
-            layout = QVBoxLayout()
-            layout.setContentsMargins(5, 5, 5, 5)
-            layout.setSpacing(5)
-            
-            # Create console output widget (QTreeWidget)
-            self.console_output = QTreeWidget()
-            self.console_output.setObjectName("consoleOutput")
-            self.console_output.setColumnCount(3)
-            self.console_output.setHeaderLabels(['Time', 'Type', 'Message'])
-            
-            # Set column widths
-            self.console_output.setColumnWidth(0, 100)  # Time column
-            self.console_output.setColumnWidth(1, 120)  # Type column
-            self.console_output.setColumnWidth(2, 600)  # Message column
-            
-            # Apply specific styling for the console tree widget
-            self.console_output.setStyleSheet("""
-                QTreeWidget {
-                    background-color: rgba(4, 11, 17, 0.98);
-                    border: 1px solid #00A6ED;
-                    border-radius: 2px;
-                    color: #FFFFFF;
-                    font-family: 'Consolas', 'Courier New', monospace;
-                    font-size: 12px;
-                    padding: 4px;
-                }
-                QTreeWidget::item {
-                    border: none;
-                    padding: 4px;
-                    margin: 2px 0;
-                }
-                QTreeWidget::item:hover {
-                    background: rgba(0, 166, 237, 0.15);
-                    color: #40C4FF;
-                }
-                QTreeWidget::item:selected {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                        stop:0 #003D5C,
-                        stop:1 #0077AA
-                    );
-                    color: white;
-                }
-                QTreeWidget::branch {
-                    background: transparent;
-                }
-                QTreeWidget::branch:has-siblings:!adjoins-item {
-                    border-image: url(none.png) 0;
-                }
-                QTreeWidget::branch:has-siblings:adjoins-item {
-                    border-image: url(none.png) 0;
-                }
-                QTreeWidget::branch:!has-children:!has-siblings:adjoins-item {
-                    border-image: url(none.png) 0;
-                }
-                QHeaderView::section {
-                    background: rgba(4, 11, 17, 0.98);
-                    color: #00A6ED;
-                    padding: 4px;
-                    border: 1px solid #00A6ED;
-                    font-size: 12px;
-                    font-weight: bold;
-                }
-                QHeaderView::section:hover {
-                    background: rgba(0, 166, 237, 0.15);
-                    color: #40C4FF;
-                }
-            """)
-            
-            # Add the console to the layout and set the layout for the tab
-            layout.addWidget(self.console_output)
-            tab.setLayout(layout)
-            
-            # Initialize logger with the properly configured console widget
-            if not hasattr(self, 'logger') or self.logger is None:
-                try:
-                    print("Initializing logger...")
-                    self.logger = Logger(self.console_output, log_file=self.log_file)
-                    print("Logger initialized with console widget")
-                    self.logger.log_info("Console initialized")
-                    print("Test log message sent successfully")
-                except Exception as e:
-                    print(f"Error initializing logger: {str(e)}")
-                    import traceback
-                    print(traceback.format_exc())
-                    # Create a fallback logger that only logs to file
-                    self.logger = Logger(log_file=self.log_file)
-            
-            return tab
-            
-        except Exception as e:
-            print(f"Error in create_watcher_tab: {str(e)}")
-            import traceback
-            print(traceback.format_exc())
-            # Return an empty tab if something goes wrong
-            empty_tab = QWidget()
-            empty_tab.setLayout(QVBoxLayout())
-            return empty_tab
+        print("Creating watcher tab...")
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(5, 5, 5, 5)  # Reduced margins
+        layout.setSpacing(5)  # Reduced spacing
         
-    def clear_console(self):
-        """Clear the console output"""
-        self.console_output.clear()
+        # Create console output
+        console_group = QGroupBox("Combat Feed")
+        console_layout = QVBoxLayout(console_group)
+        console_layout.setContentsMargins(5, 15, 5, 5)  # Reduced margins, keep top margin for title
+        console_layout.setSpacing(0)  # Minimal spacing
         
-    def _format_event_details(self, event_data):
-        """Format event data into a readable structure"""
-        details = {}
+        self.console_output = QTextEdit()
+        self.console_output.setReadOnly(True)
+        self.console_output.setObjectName("consoleOutput")
+        console_layout.addWidget(self.console_output)
         
-        if 'vname' in event_data and 'kname' in event_data:
-            details['Victim'] = f"💀 {event_data['vname']}"
-            details['Killer'] = f"😈 {event_data['kname']}"
+        layout.addWidget(console_group)
+        print("Watcher tab created")
+        return tab
         
-        if 'kwep' in event_data:
-            details['Weapon'] = f"🔫 {event_data['kwep']}"
-        
-        if 'vship' in event_data:
-            details['Ship'] = f"🚀 {event_data['vship']}"
-        
-        if 'dtype' in event_data:
-            details['Damage Type'] = f"💥 {event_data['dtype']}"
-
-        return details
-
     def create_history_tab(self):
         print("Creating history tab...")
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(5, 5, 5, 5)  
-        layout.setSpacing(5)  
+        layout.setContentsMargins(5, 5, 5, 5)  # Reduced margins
+        layout.setSpacing(5)  # Reduced spacing
         
         # Session selection
         session_layout = QHBoxLayout()
-        session_layout.setSpacing(5)  
+        session_layout.setSpacing(5)  # Reduced spacing
         session_label = QLabel("Session:")
         session_label.setObjectName("sectionLabel")
         self.session_combo = QComboBox()
         self.session_combo.currentTextChanged.connect(self.on_session_changed)
-        self.session_combo.setFixedHeight(25)  
+        self.session_combo.setFixedHeight(25)  # Reduced height
         
         clear_button = QPushButton("🗑️ Clear History")
         clear_button.setObjectName("actionButton")
-        clear_button.setFixedHeight(25)  
+        clear_button.setFixedHeight(25)  # Reduced height
         clear_button.clicked.connect(self.show_clear_history_dialog)
         
         session_layout.addWidget(session_label)
@@ -2196,40 +1619,37 @@ class MainWindow(QMainWindow):
         session_layout.addWidget(clear_button)
         layout.addLayout(session_layout)
         
-        # Create horizontal splitter for side-by-side layout
-        splitter = QSplitter(Qt.Horizontal)
+        # Create splitter for kill list and details
+        splitter = QSplitter(Qt.Vertical)
         
         # Kill list group
-        kill_group = QGroupBox("Events")
+        kill_group = QGroupBox("Combat Events")
         kill_layout = QVBoxLayout(kill_group)
-        kill_layout.setContentsMargins(5, 15, 5, 5)  
-        kill_layout.setSpacing(0)  
+        kill_layout.setContentsMargins(5, 15, 5, 5)  # Reduced margins, keep top margin for title
+        kill_layout.setSpacing(0)  # Minimal spacing
         
         self.kill_list = QListWidget()
         self.kill_list.currentItemChanged.connect(self.on_kill_selected)
         kill_layout.addWidget(self.kill_list)
         
         # Kill details group
-        details_group = QGroupBox("Details")
+        details_group = QGroupBox("Event Details")
         details_layout = QVBoxLayout(details_group)
-        details_layout.setContentsMargins(5, 15, 5, 5)  
-        details_layout.setSpacing(0)  
+        details_layout.setContentsMargins(5, 15, 5, 5)  # Reduced margins, keep top margin for title
+        details_layout.setSpacing(0)  # Minimal spacing
         
         self.kill_details = QTreeWidget()
         self.kill_details.setHeaderLabels(["Field", "Value"])
         self.kill_details.setColumnWidth(0, 150)
-        self.kill_details.itemDoubleClicked.connect(self.on_details_item_double_clicked)
-        self.kill_details.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.kill_details.customContextMenuRequested.connect(self.show_details_context_menu)
         details_layout.addWidget(self.kill_details)
         
+        # Add groups to splitter
         splitter.addWidget(kill_group)
         splitter.addWidget(details_group)
         
-        # Set initial sizes to 50-50 split
-        splitter.setSizes([int(splitter.width() * 0.5)] * 2)
-        
+        # Add splitter to layout
         layout.addWidget(splitter)
+        
         print("History tab created")
         return tab
         
@@ -2237,343 +1657,105 @@ class MainWindow(QMainWindow):
         print("Creating party tab...")
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(5, 5, 5, 5)  
-        layout.setSpacing(5)  
-        
-        # Create main vertical splitter
-        main_splitter = QSplitter(Qt.Vertical)
+        layout.setContentsMargins(5, 5, 5, 5)  # Reduced margins
+        layout.setSpacing(5)  # Reduced spacing
         
         # Party members group
         members_group = QGroupBox("Party Members")
         members_layout = QVBoxLayout(members_group)
-        members_layout.setContentsMargins(5, 15, 5, 5)  
-        members_layout.setSpacing(5)  
+        members_layout.setContentsMargins(5, 15, 5, 5)  # Reduced margins, keep top margin for title
+        members_layout.setSpacing(5)  # Reduced spacing
         
         # Party list and controls
         self.party_members_list = QListWidget()
-        self.party_members_list.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.party_members_list.customContextMenuRequested.connect(self.show_party_member_context_menu)
         members_layout.addWidget(self.party_members_list)
         
         controls_layout = QHBoxLayout()
-        controls_layout.setSpacing(5)  
+        controls_layout.setSpacing(5)  # Reduced spacing
         add_button = QPushButton("➕ Add Member")
         add_button.setObjectName("actionButton")
-        add_button.setFixedHeight(25)  
+        add_button.setFixedHeight(25)  # Reduced height
         add_button.clicked.connect(self.show_add_member_dialog)
         remove_button = QPushButton("❌ Remove Member")
         remove_button.setObjectName("actionButton")
-        remove_button.setFixedHeight(25)  
+        remove_button.setFixedHeight(25)  # Reduced height
         remove_button.clicked.connect(self.remove_party_member)
         
         controls_layout.addWidget(add_button)
         controls_layout.addWidget(remove_button)
         members_layout.addLayout(controls_layout)
         
-        # Add members group to main splitter
-        main_splitter.addWidget(members_group)
+        # Add members group to main layout
+        layout.addWidget(members_group)
         
-        # Create horizontal splitter for events and details
-        events_splitter = QSplitter(Qt.Horizontal)
+        # Create splitter for party events and details
+        splitter = QSplitter(Qt.Vertical)
         
         # Party events group
         events_group = QGroupBox("Party Events")
         events_layout = QVBoxLayout(events_group)
-        events_layout.setContentsMargins(5, 15, 5, 5)  
-        events_layout.setSpacing(0)  
+        events_layout.setContentsMargins(5, 15, 5, 5)  # Reduced margins, keep top margin for title
+        events_layout.setSpacing(0)  # Minimal spacing
         
         self.party_event_list = QListWidget()
         self.party_event_list.currentItemChanged.connect(self.on_party_event_selected)
         events_layout.addWidget(self.party_event_list)
-        events_splitter.addWidget(events_group)
         
         # Party event details group
         details_group = QGroupBox("Event Details")
         details_layout = QVBoxLayout(details_group)
-        details_layout.setContentsMargins(5, 15, 5, 5)  
-        details_layout.setSpacing(0)  
+        details_layout.setContentsMargins(5, 15, 5, 5)  # Reduced margins, keep top margin for title
+        details_layout.setSpacing(0)  # Minimal spacing
         
         self.party_event_details = QTreeWidget()
         self.party_event_details.setHeaderLabels(["Field", "Value"])
         self.party_event_details.setColumnWidth(0, 150)
         details_layout.addWidget(self.party_event_details)
-        events_splitter.addWidget(details_group)
         
-        # Set initial sizes for horizontal splitter (50-50)
-        events_splitter.setSizes([int(events_splitter.width() * 0.5)] * 2)
+        # Add groups to splitter
+        splitter.addWidget(events_group)
+        splitter.addWidget(details_group)
         
-        # Add events splitter to main splitter
-        main_splitter.addWidget(events_splitter)
-        
-        # Set initial sizes for main splitter (40-60)
-        main_splitter.setSizes([int(main_splitter.height() * 0.4), int(main_splitter.height() * 0.6)])
-        
-        # Add main splitter to layout
-        layout.addWidget(main_splitter)
+        # Add splitter to layout
+        layout.addWidget(splitter)
         
         print("Party tab created")
         return tab
 
-    def show_party_member_context_menu(self, position):
-        """Show context menu for party members"""
-        try:
-            item = self.party_members_list.itemAt(position)
-            if not item:
-                return
-                
-            player_name = item.text()
-            if 'NPC' in player_name:
-                return
-                
-            menu = QMenu()
-            view_dossier = menu.addAction("View RSI Dossier")
-            view_dossier.triggered.connect(lambda: self.open_dossier(player_name))
-            menu.exec_(self.party_members_list.viewport().mapToGlobal(position))
-            
-        except Exception as e:
-            self.logger.log_error(f"Error showing party member context menu: {str(e)}")
-
     def save_session_history(self, session_id, events):
-        """Save session history to a date-based file"""
+        """Save session history to a file"""
         try:
-            # Get current date for filename
-            current_date = datetime.datetime.now().strftime('%Y%m%d')
-            history_file = os.path.join(self.history_dir, f'vw_history_{current_date}.txt')
-            
-            # Load existing events for today if file exists
-            existing_events = []
-            if os.path.exists(history_file):
-                try:
-                    with open(history_file, 'r') as f:
-                        existing_events = json.load(f)
-                except:
-                    existing_events = []
-            
-            # Append new events
-            all_events = existing_events + events
-            
-            # Save combined events back to file
+            history_file = os.path.join(self.history_dir, f'session_{session_id.replace(":", "-")}.json')
             with open(history_file, 'w') as f:
-                json.dump(all_events, f, indent=4)
-                
+                json.dump(events, f, indent=4)
         except Exception as e:
-            self.logger.log_error(f"Error saving session history: {str(e)}")
+            self.logger.error(f"Error saving session history: {str(e)}")
             
     def load_session_histories(self):
-        """Load all session histories from date-based files"""
+        """Load all session histories from files"""
         try:
             self.session_history = {}
             self.session_combo.clear()
             
             # List all history files
             for filename in os.listdir(self.history_dir):
-                if filename.startswith('vw_history_') and filename.endswith('.txt'):
+                if filename.startswith('session_') and filename.endswith('.json'):
                     try:
-                        # Extract date from filename
-                        date_str = filename[11:-4]  # Remove 'vw_history_' and '.txt'
+                        # Extract session ID from filename
+                        session_id = filename[8:-5].replace("-", ":")
                         
-                        # Load events from file
+                        # Load session data
                         with open(os.path.join(self.history_dir, filename), 'r') as f:
-                            events = json.load(f)
+                            session_data = json.load(f)
                             
-                        # Group events by session time
-                        for event in events:
-                            timestamp = event.get('timestamp', '')
-                            if timestamp:
-                                session_key = f"{date_str} {timestamp.split()[0]}"  # Use date + hour as session key
-                                if session_key not in self.session_history:
-                                    self.session_history[session_key] = []
-                                    self.session_combo.addItem(session_key)
-                                self.session_history[session_key].append(event)
-                                
+                        self.session_history[session_id] = session_data
+                        self.session_combo.addItem(session_id)
                     except Exception as e:
-                        self.logger.log_error(f"Error loading history file {filename}: {str(e)}")
+                        self.logger.error(f"Error loading session file {filename}: {str(e)}")
                         
-            # Sort sessions by date/time
-            self.session_combo.model().sort(0, Qt.DescendingOrder)
-            
         except Exception as e:
-            self.logger.log_error(f"Error loading session histories: {str(e)}")
+            self.logger.error(f"Error loading session histories: {str(e)}")
 
-    def on_details_item_double_clicked(self, item, column):
-        """Handle double-click events on details items"""
-        try:
-            if not item or column != 1:  # Only handle clicks on the value column
-                return
-                
-            field = item.text(0)
-            value = item.text(1)
-            
-            if field in ["💀 Victim", "😈 Killer"]:  # Updated to match the actual emoji used for Killer
-                if 'NPC' in value:
-                    self.toast_manager.show_info_toast("No dossier available for NPC")
-                else:
-                    # Open RSI dossier link
-                    player_name = value
-                    url = f"https://robertsspaceindustries.com/en/citizens/{player_name}"
-                    QDesktopServices.openUrl(QUrl(url))
-                    
-            elif field == "🚀 Ship":
-                # Open ship performance link
-                ship_name = value
-                url = f"https://www.spviewer.eu/performance?ship={ship_name}"
-                QDesktopServices.openUrl(QUrl(url))
-                
-        except Exception as e:
-            self.logger.log_error(f"Error handling details double-click: {str(e)}")
-            
-    def show_details_context_menu(self, position):
-        """Show context menu for details items"""
-        try:
-            item = self.kill_details.itemAt(position)
-            if not item:
-                return
-                
-            field = item.text(0)
-            value = item.text(1)
-            
-            if field in ["💀 Victim", "😈 Killer"]:  # Updated to match the actual emoji used for Killer
-                menu = QMenu()
-                
-                if 'NPC' in value:
-                    action = menu.addAction("No dossier available")
-                    action.setEnabled(False)
-                else:
-                    action = menu.addAction("View Dossier")
-                    action.triggered.connect(lambda: self.open_dossier(value))
-                    
-                menu.exec_(self.kill_details.viewport().mapToGlobal(position))
-                
-        except Exception as e:
-            self.logger.log_error(f"Error showing context menu: {str(e)}")
-            
-    def open_dossier(self, player_name):
-        """Open RSI dossier link for a player"""
-        try:
-            url = f"https://robertsspaceindustries.com/en/citizens/{player_name}"
-            QDesktopServices.openUrl(QUrl(url))
-        except Exception as e:
-            self.logger.log_error(f"Error opening dossier: {str(e)}")
-
-    def setup_tray_icon(self):
-        """Set up the system tray icon and its menu"""
-        # Create the tray icon menu
-        tray_menu = QMenu()
-        
-        # Show action
-        show_action = QAction("Show", self)
-        show_action.triggered.connect(self.show_window)
-        tray_menu.addAction(show_action)
-        
-        # Hide action
-        hide_action = QAction("Hide", self)
-        hide_action.triggered.connect(self.hide_window)
-        tray_menu.addAction(hide_action)
-        
-        # Stay on top action
-        self.stay_on_top_action = QAction("Stay on top", self)
-        self.stay_on_top_action.setCheckable(True)
-        self.stay_on_top_action.triggered.connect(self.toggle_stay_on_top)
-        tray_menu.addAction(self.stay_on_top_action)
-        
-        # Add separator
-        tray_menu.addSeparator()
-        
-        # Start/Stop watcher action
-        self.watcher_action = QAction("Start Watcher", self)
-        self.watcher_action.triggered.connect(self.toggle_watcher)
-        tray_menu.addAction(self.watcher_action)
-        
-        # Add separator
-        tray_menu.addSeparator()
-        
-        # Exit action
-        exit_action = QAction("Exit", self)
-        exit_action.triggered.connect(self.close)
-        tray_menu.addAction(exit_action)
-        
-        # Set the menu for tray icon
-        self.tray_icon.setContextMenu(tray_menu)
-        
-        # Set default icon (black heart)
-        self.update_tray_icon()
-        
-        # Connect double click
-        self.tray_icon.activated.connect(self.tray_icon_activated)
-        
-        # Show the tray icon
-        self.tray_icon.show()
-        
-    def create_emoji_icon(self, emoji, size=22):
-        """Create an icon from an emoji character"""
-        # Create a transparent image
-        image = QImage(size, size, QImage.Format_ARGB32)
-        image.fill(Qt.transparent)
-        
-        # Create painter and set font
-        painter = QPainter(image)
-        font = QFont()
-        font.setPointSize(size - 4)  # Slightly smaller than image size
-        painter.setFont(font)
-        
-        # Draw the emoji centered in the image
-        painter.drawText(image.rect(), Qt.AlignCenter, emoji)
-        painter.end()
-        
-        # Convert to QIcon
-        pixmap = QPixmap.fromImage(image)
-        return QIcon(pixmap)
-        
-    def update_tray_icon(self):
-        """Update the tray icon based on watcher status"""
-        if self.is_watching:
-            self.tray_icon.setToolTip("VerseWatcher (Watching)")
-            self.tray_icon.setIcon(self.create_emoji_icon("💙"))
-        else:
-            self.tray_icon.setToolTip("VerseWatcher (Not Watching)")
-            self.tray_icon.setIcon(self.create_emoji_icon("🖤"))
-            
-    def show_window(self):
-        """Show and activate the main window"""
-        self.show()
-        self.raise_()
-        self.activateWindow()
-        
-    def hide_window(self):
-        """Hide the main window"""
-        self.hide()
-        
-    def toggle_stay_on_top(self, checked):
-        """Toggle the window's stay on top state"""
-        flags = self.windowFlags()
-        if checked:
-            self.setWindowFlags(flags | Qt.WindowStaysOnTopHint)
-        else:
-            self.setWindowFlags(flags & ~Qt.WindowStaysOnTopHint)
-        self.show()
-        
-    def toggle_watcher(self):
-        """Toggle the watcher state"""
-        if self.is_watching:
-            self.stop_watching()
-        else:
-            self.start_watching()
-            
-    def start_watching(self):
-        """Start the watcher"""
-        if not self.is_watching:
-            self.toggle_watching()
-                
-    def stop_watching(self):
-        """Stop the watcher"""
-        if self.is_watching:
-            self.toggle_watching()
-            
-    def tray_icon_activated(self, reason):
-        """Handle tray icon activation"""
-        if reason == QSystemTrayIcon.DoubleClick:
-            self.show_window()
-            
 def main():
     try:
         # Create log directory in user's documents
