@@ -5,6 +5,3 @@ ruff format .
 
 # Run linting with auto-fix
 ruff check --fix .
-
-# Run type checking
-pyright
