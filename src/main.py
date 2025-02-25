@@ -2041,14 +2041,18 @@ class MainWindow(QMainWindow):
         """
 
         github_link = QLabel(
-            '<a href="https://github.com/PINKgeekPDX/VerseWatcher" style="color: inherit; text-decoration: none;">🔗 GitHub Repository</a>'
+            '<a href="https://github.com/PINKgeekPDX/VerseWatcher" '
+            'style="color: inherit; text-decoration: none;">'
+            "🔗 GitHub Repository</a>"
         )
         github_link.setOpenExternalLinks(True)
         github_link.setStyleSheet(link_style)
         github_link.setAlignment(Qt.AlignCenter)
         links_layout.addWidget(github_link)
         issues_link = QLabel(
-            '<a href="https://github.com/PINKgeekPDX/VerseWatcher/issues" style="color: inherit; text-decoration: none;">🐛 Report Issues</a>'
+            '<a href="https://github.com/PINKgeekPDX/VerseWatcher/issues" '
+            'style="color: inherit; text-decoration: none;">'
+            "🐛 Report Issues</a>"
         )
         issues_link.setOpenExternalLinks(True)
         issues_link.setStyleSheet(link_style)
@@ -2080,7 +2084,8 @@ class MainWindow(QMainWindow):
             "Developed by: {PINKgeekPDX}\n"
             "Design: {PINKgeekPDX}\n"
             "\n"
-            "Special thanks to the Star Citizen community for helping guide and test with the development of this tool!"
+            "Special thanks to the Star Citizen community for helping guide "
+            "and test with the development of this tool!"
         )
         credits_text.setStyleSheet("""
             font-size: 14px;
@@ -2437,7 +2442,8 @@ class MainWindow(QMainWindow):
                         for event in events:
                             timestamp = event.get("timestamp", "")
                             if timestamp:
-                                session_key = f"{date_str} {timestamp.split()[0]}"  # Use date + hour as session key
+                                # Use date + hour as session key
+                                session_key = f"{date_str} {timestamp.split()[0]}"
                                 if session_key not in self.session_history:
                                     self.session_history[session_key] = []
                                     self.session_combo.addItem(session_key)
