@@ -1,0 +1,14 @@
+{
+    "include": [
+        "src"
+    ],
+    "exclude": [
+        "**/node_modules",
+        "**/__pycache__"
+    ],
+    "typeCheckingMode": "basic",
+    "reportMissingModuleSource": "warning",
+    "reportOptionalMemberAccess": "warning",
+    "reportAttributeAccessIssue": "warning",
+    "reportIncompatibleMethodOverride": "warning"
+}
