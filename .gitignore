@@ -44,3 +44,6 @@ ENV/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Mentat
+.mentat/logs/
