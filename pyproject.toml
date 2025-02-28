@@ -1,0 +1,18 @@
+[tool.ruff]
+line-length = 100
+target-version = "py37"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore line length for files containing SVG data URLs
+"src/main.py" = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
