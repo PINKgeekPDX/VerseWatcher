@@ -254,3 +254,29 @@ To manually build without the batch file:
 - This app does not interfere with your game in any way. 
 - It will not be flagged by Anti cheat as it is totally passive.
 - Using this does not violate TOS whatsoever.
+
+## Windows Defender Warnings
+
+VerseWatcher is built using PyInstaller, which can sometimes trigger false positives in Windows Defender. This is common for Python applications and does not indicate any actual security risk. Here's how to handle it:
+
+### Verifying the Application
+1. Each release includes a `checksum.txt` file containing the SHA256 hash of the executable
+2. You can verify the file hasn't been tampered with by running this in PowerShell:
+   ```powershell
+   Get-FileHash "path\to\VerseWatcher.exe" -Algorithm SHA256
+   ```
+3. Compare the hash with the one in `checksum.txt`
+
+### Adding an Exception
+If Windows Defender is blocking the application:
+1. Open Windows Security
+2. Go to "Virus & threat protection"
+3. Click "Manage settings" under "Virus & threat protection settings"
+4. Scroll down to "Exclusions" and click "Add or remove exclusions"
+5. Click "Add an exclusion" and choose "File"
+6. Select the VerseWatcher.exe file
+
+### Why These Warnings Happen
+- Windows Defender sometimes flags Python applications as suspicious because they're packaged as standalone executables
+- This is a known issue with PyInstaller and affects many legitimate Python applications
+- VerseWatcher is open source, and you can verify the code and build process yourself

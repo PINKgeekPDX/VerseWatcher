@@ -1,0 +1,191 @@
+﻿=== VerseWatcher Build Success Report ===
+Build Date: 2025-03-01 19:50:34
+Build Duration: 00:00:48
+Version: a1.0.1
+
+=== Build Configuration ===
+Python Version: 3.9.13
+PowerShell Version: 5.1.19041.5486
+Debug Mode: False
+Skip Sign: False
+
+=== Build Log ===
+[2025-03-01 19:50:34] [INFO] Found Python 3.9.13
+[2025-03-01 19:50:34] [INFO] Creating directory: build_temp
+[2025-03-01 19:50:34] [SUCCESS] Build environment initialized
+[2025-03-01 19:50:34] [INFO] Using existing virtual environment
+[2025-03-01 19:50:34] [SUCCESS] Virtual environment activated
+[2025-03-01 19:50:34] [INFO] Installing package [1/5]: PyQt5==5.15.9
+[2025-03-01 19:50:38] [SUCCESS] Successfully installed PyQt5==5.15.9
+[2025-03-01 19:50:38] [INFO] Installing package [2/5]: watchdog==3.0.0
+[2025-03-01 19:50:39] [SUCCESS] Successfully installed watchdog==3.0.0
+[2025-03-01 19:50:39] [INFO] Installing package [3/5]: pywin32==306
+[2025-03-01 19:50:40] [SUCCESS] Successfully installed pywin32==306
+[2025-03-01 19:50:40] [INFO] Installing package [4/5]: pyinstaller==6.3.0
+[2025-03-01 19:50:42] [SUCCESS] Successfully installed pyinstaller==6.3.0
+[2025-03-01 19:50:42] [INFO] Installing package [5/5]: sip==6.7.12
+[2025-03-01 19:50:43] [SUCCESS] Successfully installed sip==6.7.12
+[2025-03-01 19:50:43] [SUCCESS] All dependencies installed
+[2025-03-01 19:50:43] [INFO] Configuring PyInstaller build
+[2025-03-01 19:50:43] [INFO] Build arguments: --clean --onefile --windowed --icon C:\Users\Shadow\Desktop\projects\VerseWatcher\icon.ico --distpath C:\Users\Shadow\Desktop\projects\VerseWatcher\dist --workpath C:\Users\Shadow\Desktop\projects\VerseWatcher\build_temp --name VerseWatcher --version-file C:\Users\Shadow\Desktop\projects\VerseWatcher\build\file_version_info.txt --noupx --noconsole --disable-windowed-traceback --uac-admin C:\Users\Shadow\Desktop\projects\VerseWatcher\src\main.py
+[2025-03-01 19:50:43] [INFO] Starting PyInstaller build...
+[2025-03-01 19:51:17] [INFO] PyInstaller: 6.3.0
+[2025-03-01 19:51:17] [INFO] Python: 3.9.13
+[2025-03-01 19:51:17] [INFO] Platform: Windows-10-10.0.19045-SP0
+[2025-03-01 19:51:17] [INFO] wrote C:\Users\Shadow\Desktop\projects\VerseWatcher\VerseWatcher.spec
+[2025-03-01 19:51:17] [INFO] Removing temporary files and cleaning cache in C:\Users\Shadow\AppData\Local\pyinstaller
+[2025-03-01 19:51:17] [INFO] Extending PYTHONPATH with paths
+[2025-03-01 19:51:17] [INFO] checking Analysis
+[2025-03-01 19:51:17] [INFO] Building Analysis because Analysis-00.toc is non existent
+[2025-03-01 19:51:17] [INFO] Initializing module dependency graph...
+[2025-03-01 19:51:17] [INFO] Caching module graph hooks...
+[2025-03-01 19:51:17] [INFO] Analyzing base_library.zip ...
+[2025-03-01 19:51:17] [INFO] Loading module hook 'hook-heapq.py' from 'C:\\Users\\Shadow\\Desktop\\projects\\VerseWatcher\\venv\\lib\\site-packages\\PyInstaller\\hooks'...
+[2025-03-01 19:51:17] [INFO] Loading module hook 'hook-encodings.py' from 'C:\\Users\\Shadow\\Desktop\\projects\\VerseWatcher\\venv\\lib\\site-packages\\PyInstaller\\hooks'...
+[2025-03-01 19:51:17] [INFO] Loading module hook 'hook-pickle.py' from 'C:\\Users\\Shadow\\Desktop\\projects\\VerseWatcher\\venv\\lib\\site-packages\\PyInstaller\\hooks'...
+[2025-03-01 19:51:17] [INFO] Caching module dependency graph...
+[2025-03-01 19:51:17] [INFO] Running Analysis Analysis-00.toc
+[2025-03-01 19:51:17] [INFO] Looking for Python shared library...
+[2025-03-01 19:51:17] [INFO] Using Python shared library: C:\Program Files (x86)\Microsoft Visual Studio\Shared\Python39_64\python39.dll
+[2025-03-01 19:51:17] [INFO] Analyzing C:\Users\Shadow\Desktop\projects\VerseWatcher\src\main.py
+[2025-03-01 19:51:17] [INFO] Loading module hook 'hook-platform.py' from 'C:\\Users\\Shadow\\Desktop\\projects\\VerseWatcher\\venv\\lib\\site-packages\\PyInstaller\\hooks'...
+[2025-03-01 19:51:17] [INFO] Loading module hook 'hook-PyQt5.py' from 'C:\\Users\\Shadow\\Desktop\\projects\\VerseWatcher\\venv\\lib\\site-packages\\PyInstaller\\hooks'...
+[2025-03-01 19:51:17] [INFO] Processing module hooks...
+[2025-03-01 19:51:17] [INFO] Loading module hook 'hook-PyQt5.QtCore.py' from 'C:\\Users\\Shadow\\Desktop\\projects\\VerseWatcher\\venv\\lib\\site-packages\\PyInstaller\\hooks'...
+[2025-03-01 19:51:17] [INFO] Loading module hook 'hook-PyQt5.QtGui.py' from 'C:\\Users\\Shadow\\Desktop\\projects\\VerseWatcher\\venv\\lib\\site-packages\\PyInstaller\\hooks'...
+[2025-03-01 19:51:17] [INFO] Loading module hook 'hook-PyQt5.QtWidgets.py' from 'C:\\Users\\Shadow\\Desktop\\projects\\VerseWatcher\\venv\\lib\\site-packages\\PyInstaller\\hooks'...
+[2025-03-01 19:51:17] [INFO] Performing binary vs. data reclassification (98 entries)
+[2025-03-01 19:51:17] [INFO] Looking for ctypes DLLs
+[2025-03-01 19:51:17] [INFO] Analyzing run-time hooks ...
+[2025-03-01 19:51:17] [INFO] Including run-time hook 'C:\\Users\\Shadow\\Desktop\\projects\\VerseWatcher\\venv\\lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_pyqt5.py'
+[2025-03-01 19:51:17] [INFO] Processing pre-find module path hook _pyi_rth_utils from 'C:\\Users\\Shadow\\Desktop\\projects\\VerseWatcher\\venv\\lib\\site-packages\\PyInstaller\\hooks\\pre_find_module_path\\hook-_pyi_rth_utils.py'.
+[2025-03-01 19:51:17] [INFO] Loading module hook 'hook-_pyi_rth_utils.py' from 'C:\\Users\\Shadow\\Desktop\\projects\\VerseWatcher\\venv\\lib\\site-packages\\PyInstaller\\hooks'...
+[2025-03-01 19:51:17] [INFO] Including run-time hook 'C:\\Users\\Shadow\\Desktop\\projects\\VerseWatcher\\venv\\lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_pkgutil.py'
+[2025-03-01 19:51:17] [INFO] Including run-time hook 'C:\\Users\\Shadow\\Desktop\\projects\\VerseWatcher\\venv\\lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_inspect.py'
+[2025-03-01 19:51:17] [INFO] Looking for dynamic libraries
+[2025-03-01 19:51:17] [INFO] Extra DLL search directories (AddDllDirectory): ['C:\\Users\\Shadow\\Desktop\\projects\\VerseWatcher\\venv\\lib\\site-packages\\PyQt5\\Qt5\\bin']
+[2025-03-01 19:51:17] [INFO] Extra DLL search directories (PATH): ['C:\\Users\\Shadow\\Desktop\\projects\\VerseWatcher\\venv\\lib\\site-packages\\PyQt5\\Qt5\\bin']
+[2025-03-01 19:51:17] [INFO] Warnings written to C:\Users\Shadow\Desktop\projects\VerseWatcher\build_temp\VerseWatcher\warn-VerseWatcher.txt
+[2025-03-01 19:51:17] [INFO] Graph cross-reference written to C:\Users\Shadow\Desktop\projects\VerseWatcher\build_temp\VerseWatcher\xref-VerseWatcher.html
+[2025-03-01 19:51:17] [INFO] checking PYZ
+[2025-03-01 19:51:17] [INFO] Building PYZ because PYZ-00.toc is non existent
+[2025-03-01 19:51:17] [INFO] Building PYZ (ZlibArchive) C:\Users\Shadow\Desktop\projects\VerseWatcher\build_temp\VerseWatcher\PYZ-00.pyz
+[2025-03-01 19:51:17] [INFO] Building PYZ (ZlibArchive) C:\Users\Shadow\Desktop\projects\VerseWatcher\build_temp\VerseWatcher\PYZ-00.pyz completed successfully.
+[2025-03-01 19:51:17] [INFO] checking PKG
+[2025-03-01 19:51:17] [INFO] Building PKG because PKG-00.toc is non existent
+[2025-03-01 19:51:17] [INFO] Building PKG (CArchive) VerseWatcher.pkg
+[2025-03-01 19:51:17] [INFO] Building PKG (CArchive) VerseWatcher.pkg completed successfully.
+[2025-03-01 19:51:17] [INFO] Bootloader C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\lib\site-packages\PyInstaller\bootloader\Windows-64bit-intel\runw.exe
+[2025-03-01 19:51:17] [INFO] checking EXE
+[2025-03-01 19:51:17] [INFO] Building EXE because EXE-00.toc is non existent
+[2025-03-01 19:51:17] [INFO] Building EXE from EXE-00.toc
+[2025-03-01 19:51:17] [INFO] Copying bootloader EXE to C:\Users\Shadow\Desktop\projects\VerseWatcher\dist\VerseWatcher.exe
+[2025-03-01 19:51:17] [INFO] Copying icon to EXE
+[2025-03-01 19:51:17] [INFO] Copying version information to EXE
+[2025-03-01 19:51:17] [INFO] Copying 0 resources to EXE
+[2025-03-01 19:51:17] [INFO] Embedding manifest in EXE
+[2025-03-01 19:51:17] [INFO] Appending PKG archive to EXE
+[2025-03-01 19:51:17] [INFO] Fixing EXE headers
+[2025-03-01 19:51:17] [INFO] Building EXE from EXE-00.toc completed successfully.
+[2025-03-01 19:51:17] [SUCCESS] Build completed successfully
+[2025-03-01 19:51:19] [INFO] Attempting to sign with timestamp server: http://timestamp.digicert.com
+[2025-03-01 19:51:21] [INFO] Removing: C:\Users\Shadow\Desktop\projects\VerseWatcher\build_temp
+[2025-03-01 19:51:21] [INFO] Removing: C:\Users\Shadow\Desktop\projects\VerseWatcher\*.spec
+[2025-03-01 19:51:21] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\src\__pycache__
+[2025-03-01 19:51:21] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\__pycache__
+[2025-03-01 19:51:21] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\altgraph\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\importlib_metadata\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\importlib_metadata\compat\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\ordlookup\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\packaging\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_internal\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_internal\cli\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_internal\commands\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_internal\distributions\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_internal\index\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_internal\locations\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_internal\metadata\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_internal\models\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_internal\network\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_internal\operations\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_internal\operations\build\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_internal\operations\install\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_internal\req\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_internal\resolution\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_internal\resolution\resolvelib\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_internal\utils\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_internal\vcs\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\cachecontrol\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\cachecontrol\caches\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\certifi\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\distlib\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\idna\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\msgpack\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\packaging\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\pkg_resources\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\platformdirs\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\pygments\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\pygments\filters\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\pygments\lexers\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\pygments\styles\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\pyproject_hooks\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\pyproject_hooks\_in_process\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\requests\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\resolvelib\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\resolvelib\compat\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\rich\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\tomli\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\urllib3\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\urllib3\contrib\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\urllib3\packages\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pip\_vendor\urllib3\util\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pkg_resources\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pkg_resources\extern\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pkg_resources\_vendor\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\pkg_resources\_vendor\packaging\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\PyInstaller\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\PyInstaller\archive\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\PyInstaller\building\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\PyInstaller\depend\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\PyInstaller\hooks\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\PyInstaller\hooks\pre_find_module_path\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\PyInstaller\isolated\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\PyInstaller\lib\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\PyInstaller\lib\modulegraph\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\PyInstaller\loader\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\PyInstaller\utils\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\PyInstaller\utils\hooks\__pycache__
+[2025-03-01 19:51:22] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\PyInstaller\utils\hooks\qt\__pycache__
+[2025-03-01 19:51:23] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\PyInstaller\utils\win32\__pycache__
+[2025-03-01 19:51:23] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\PyQt5\__pycache__
+[2025-03-01 19:51:23] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\watchdog\__pycache__
+[2025-03-01 19:51:23] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\watchdog\observers\__pycache__
+[2025-03-01 19:51:23] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\watchdog\utils\__pycache__
+[2025-03-01 19:51:23] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\win32\lib\__pycache__
+[2025-03-01 19:51:23] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\win32com\__pycache__
+[2025-03-01 19:51:23] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\win32comext\shell\__pycache__
+[2025-03-01 19:51:23] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\win32ctypes\__pycache__
+[2025-03-01 19:51:23] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\win32ctypes\core\__pycache__
+[2025-03-01 19:51:23] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\win32ctypes\core\ctypes\__pycache__
+[2025-03-01 19:51:23] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\win32ctypes\pywin32\__pycache__
+[2025-03-01 19:51:23] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\zipp\__pycache__
+[2025-03-01 19:51:23] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\zipp\compat\__pycache__
+[2025-03-01 19:51:23] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\_distutils_hack\__pycache__
+[2025-03-01 19:51:23] [INFO] Removing Python cache: C:\Users\Shadow\Desktop\projects\VerseWatcher\venv\Lib\site-packages\_pyinstaller_hooks_contrib\__pycache__
+[2025-03-01 19:51:23] [SUCCESS] Build artifacts cleaned
+
+
+=== Build Summary ===
+Total Steps Completed: 170
+Warnings: 170
+Build Status: SUCCESS
+
+=== Signing Details ===
+[INFO] Certificate details:
+[INFO]   Subject: CN=VerseWatcher
+[INFO]   Valid until: 02/18/2030 12:05:29
+[INFO]   Thumbprint: 1A2C2C21C2927BAC83489A485DDCD368D2572640
+[SUCCESS] Successfully signed executable with timestamp from http://timestamp.digicert.com
+

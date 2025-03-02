@@ -16,6 +16,7 @@ class Logger:
         self.console_widget = console_widget
         self.log_file = log_file
         self.file_logger = None
+        self.pending_ui_updates = []  # Store pending updates for batch processing
         
         # Initialize file logger if path provided
         if log_file:
@@ -25,9 +26,17 @@ class Logger:
             handler.setFormatter(formatter)
             self.file_logger.addHandler(handler)
             self.file_logger.setLevel(logging.DEBUG)
+            
+        # Set up a timer for batched UI updates
+        self.update_timer = QTimer()
+        self.update_timer.setSingleShot(True)
+        self.update_timer.timeout.connect(self.process_pending_updates)
     
-    def ensure_autoscroll(self, item):
+    def ensure_autoscroll(self, item=None):
         """Common method to handle autoscroll functionality for all log methods"""
+        if not self.console_widget:
+            return
+            
         try:
             should_autoscroll = False
             
@@ -44,21 +53,67 @@ class Logger:
             
             # If autoscroll is enabled, force a scroll to the last item
             if should_autoscroll:
-                # Get the count of top-level items
-                count = self.console_widget.topLevelItemCount()
-                if count > 0:
-                    # Scroll to the last top-level item
-                    last_item = self.console_widget.topLevelItem(count - 1)
-                    self.console_widget.scrollToItem(last_item, QTreeWidget.PositionAtBottom)
-                    
-                    # Use a timer to ensure UI updates before scrolling
-                    QTimer.singleShot(50, lambda: self.console_widget.scrollToBottom())
+                # Queue up the scroll to happen after all UI updates
+                QTimer.singleShot(10, lambda: self._do_scroll())
         except Exception:
-            # If there's any error, just force a scroll to bottom
-            try:
-                self.console_widget.scrollToBottom()
-            except:
-                pass  # Last resort if nothing works
+            # If there's any error, just force a scroll to bottom after a delay
+            QTimer.singleShot(50, lambda: self._do_scroll())
+    
+    def _do_scroll(self):
+        """Actually perform the scrolling operation"""
+        if not self.console_widget:
+            return
+            
+        try:
+            # Get the count of top-level items
+            count = self.console_widget.topLevelItemCount()
+            if count > 0:
+                # Scroll to the last top-level item
+                last_item = self.console_widget.topLevelItem(count - 1)
+                self.console_widget.scrollToItem(last_item, QTreeWidget.PositionAtBottom)
+                
+                # Make sure to update the view immediately
+                self.console_widget.update()
+                
+                # Use a timer to ensure UI updates again after scrolling
+                QTimer.singleShot(50, self.console_widget.update)
+        except Exception:
+            pass # Silently fail if scrolling fails
+    
+    def process_pending_updates(self):
+        """Process all pending UI updates in a batch"""
+        if not self.console_widget or not self.pending_ui_updates:
+            return
+            
+        try:
+            # Add all pending items to the console
+            for item_func in self.pending_ui_updates:
+                try:
+                    item_func()
+                except Exception:
+                    pass  # Skip failed item additions
+                    
+            # Clear the pending updates
+            self.pending_ui_updates.clear()
+            
+            # Ensure autoscroll happens after all items are added
+            self.ensure_autoscroll()
+            
+        except Exception:
+            # If batch processing fails, clear the queue to prevent backup
+            self.pending_ui_updates.clear()
+    
+    def queue_console_update(self, update_func):
+        """Queue a console update to be processed in batch"""
+        if not self.console_widget:
+            return
+            
+        # Add the update function to the pending list
+        self.pending_ui_updates.append(update_func)
+        
+        # If the timer isn't already running, start it
+        if not self.update_timer.isActive():
+            self.update_timer.start(10)  # Process updates every 10ms
 
     def log_debug(self, message):
         """Log a debug message (verbose technical details)"""
@@ -69,13 +124,16 @@ class Logger:
         # Add to console with rich formatting
         if self.console_widget:
             timestamp = datetime.now().strftime("%H:%M:%S")
-            item = QTreeWidgetItem(self.console_widget)
-            item.setText(0, f"[{timestamp}] 🔍 DEBUG: {message}")
-            item.setForeground(0, QColor("#607D8B"))  # Blue-gray for debug
-            item.setData(0, Qt.UserRole, "debug")  # Store type for filtering
             
-            # Handle autoscroll
-            self.ensure_autoscroll(item)
+            # Queue the UI update
+            def add_debug_item():
+                item = QTreeWidgetItem(self.console_widget)
+                item.setText(0, f"[{timestamp}] 🔍 DEBUG: {message}")
+                item.setForeground(0, QColor("#607D8B"))  # Blue-gray for debug
+                item.setData(0, Qt.UserRole, "debug")  # Store type for filtering
+                return item
+                
+            self.queue_console_update(add_debug_item)
     
     def log_info(self, message):
         """Log an informational message"""
@@ -86,13 +144,16 @@ class Logger:
         # Add to console with rich formatting
         if self.console_widget:
             timestamp = datetime.now().strftime("%H:%M:%S")
-            item = QTreeWidgetItem(self.console_widget)
-            item.setText(0, f"[{timestamp}] ℹ️ {message}")
-            item.setForeground(0, QColor("#00A6ED"))  # Light blue for info
-            item.setData(0, Qt.UserRole, "info")  # Store type for filtering
             
-            # Handle autoscroll
-            self.ensure_autoscroll(item)
+            # Queue the UI update
+            def add_info_item():
+                item = QTreeWidgetItem(self.console_widget)
+                item.setText(0, f"[{timestamp}] ℹ️ {message}")
+                item.setForeground(0, QColor("#00A6ED"))  # Light blue for info
+                item.setData(0, Qt.UserRole, "info")  # Store type for filtering
+                return item
+                
+            self.queue_console_update(add_info_item)
     
     def log_warning(self, message):
         """Log a warning message"""
@@ -103,13 +164,16 @@ class Logger:
         # Add to console with rich formatting
         if self.console_widget:
             timestamp = datetime.now().strftime("%H:%M:%S")
-            item = QTreeWidgetItem(self.console_widget)
-            item.setText(0, f"[{timestamp}] ⚠️ {message}")
-            item.setForeground(0, QColor("#FFC107"))  # Amber for warnings
-            item.setData(0, Qt.UserRole, "warning")  # Store type for filtering
             
-            # Handle autoscroll
-            self.ensure_autoscroll(item)
+            # Queue the UI update
+            def add_warning_item():
+                item = QTreeWidgetItem(self.console_widget)
+                item.setText(0, f"[{timestamp}] ⚠️ {message}")
+                item.setForeground(0, QColor("#FFC107"))  # Amber for warnings
+                item.setData(0, Qt.UserRole, "warning")  # Store type for filtering
+                return item
+                
+            self.queue_console_update(add_warning_item)
     
     def log_error(self, message):
         """Log an error message"""
@@ -120,13 +184,16 @@ class Logger:
         # Add to console with rich formatting
         if self.console_widget:
             timestamp = datetime.now().strftime("%H:%M:%S")
-            item = QTreeWidgetItem(self.console_widget)
-            item.setText(0, f"[{timestamp}] ❌ {message}")
-            item.setForeground(0, QColor("#F44336"))  # Red for errors
-            item.setData(0, Qt.UserRole, "error")  # Store type for filtering
             
-            # Handle autoscroll
-            self.ensure_autoscroll(item)
+            # Queue the UI update
+            def add_error_item():
+                item = QTreeWidgetItem(self.console_widget)
+                item.setText(0, f"[{timestamp}] ❌ {message}")
+                item.setForeground(0, QColor("#F44336"))  # Red for errors
+                item.setData(0, Qt.UserRole, "error")  # Store type for filtering
+                return item
+                
+            self.queue_console_update(add_error_item)
     
     def log_event(self, message, event_details=None):
         """Log a game event with detailed information"""
@@ -141,28 +208,32 @@ class Logger:
         # Add to console with rich formatting
         if self.console_widget:
             timestamp = datetime.now().strftime("%H:%M:%S")
-            item = QTreeWidgetItem(self.console_widget)
-            item.setText(0, f"[{timestamp}] 🎮 {message}")
-            item.setForeground(0, QColor("#4CAF50"))  # Green for events
-            item.setData(0, Qt.UserRole, "event")  # Store type for filtering
             
-            # Add details as children if provided
-            if event_details and isinstance(event_details, dict):
-                details_parent = QTreeWidgetItem(item)
-                details_parent.setText(0, "📋 Event Details")
-                details_parent.setForeground(0, QColor("#66BB6A"))  # Mid green for details header
+            # Queue the UI update
+            def add_event_item():
+                item = QTreeWidgetItem(self.console_widget)
+                item.setText(0, f"[{timestamp}] 🎮 {message}")
+                item.setForeground(0, QColor("#4CAF50"))  # Green for events
+                item.setData(0, Qt.UserRole, "event")  # Store type for filtering
                 
-                for key, value in event_details.items():
-                    # Skip direction vectors that are typically not useful to display
-                    if key in ["dirvecx", "dirvecy", "dirvecz"]:
-                        continue
-                        
-                    detail_item = QTreeWidgetItem(details_parent)
-                    detail_item.setText(0, f"{key}: {value}")
-                    detail_item.setForeground(0, QColor("#C8E6C9"))  # Very light green for details
-            
-            # Handle autoscroll
-            self.ensure_autoscroll(item)
+                # Add details as children if provided
+                if event_details and isinstance(event_details, dict):
+                    details_parent = QTreeWidgetItem(item)
+                    details_parent.setText(0, "📋 Event Details")
+                    details_parent.setForeground(0, QColor("#66BB6A"))  # Mid green for details header
+                    
+                    for key, value in event_details.items():
+                        # Skip direction vectors that are typically not useful to display
+                        if key in ["dirvecx", "dirvecy", "dirvecz"]:
+                            continue
+                            
+                        detail_item = QTreeWidgetItem(details_parent)
+                        detail_item.setText(0, f"{key}: {value}")
+                        detail_item.setForeground(0, QColor("#C8E6C9"))  # Very light green for details
+                
+                return item
+                
+            self.queue_console_update(add_event_item)
                 
     def log_kill(self, vname, kname, kwep, vship, dtype):
         """Log a kill event to the console with detailed kill information"""
@@ -262,25 +333,27 @@ class Logger:
         
         # Get the color or default to white
         color = colors.get(color_name, QColor("#FFFFFF"))
+        final_details = details  # Store details for closure
         
-        # Create the main item
-        item = QTreeWidgetItem(self.console_widget)
-        item.setText(0, f"[{timestamp}] {message}")
-        item.setForeground(0, color)
-        item.setData(0, Qt.UserRole, event_type)  # Store type for filtering
-        
-        # Add details as child items if provided
-        if details:
-            details_parent = QTreeWidgetItem(item)
-            details_parent.setText(0, "📋 Details")
-            details_parent.setForeground(0, colors.get("details"))
+        # Queue the UI update
+        def add_formatted_item():
+            # Create the main item
+            item = QTreeWidgetItem(self.console_widget)
+            item.setText(0, f"[{timestamp}] {message}")
+            item.setForeground(0, color)
+            item.setData(0, Qt.UserRole, event_type)  # Store type for filtering
             
-            for detail in details:
-                detail_item = QTreeWidgetItem(details_parent)
-                detail_item.setText(0, detail)
-                detail_item.setForeground(0, colors.get("detail_item"))
-        
-        # Handle autoscroll
-        self.ensure_autoscroll(item)
+            # Add details as child items if provided
+            if final_details:
+                details_parent = QTreeWidgetItem(item)
+                details_parent.setText(0, "📋 Details")
+                details_parent.setForeground(0, colors.get("details"))
+                
+                for detail in final_details:
+                    detail_item = QTreeWidgetItem(details_parent)
+                    detail_item.setText(0, detail)
+                    detail_item.setForeground(0, colors.get("detail_item"))
             
-        return item
+            return item
+            
+        self.queue_console_update(add_formatted_item)

@@ -3268,11 +3268,11 @@ class MainWindow(QMainWindow):
                     if "party_toast_config" in settings:
                         party_toast_config = settings["party_toast_config"]
                         if hasattr(self, 'party_toast_position_combo') and "position" in party_toast_config:
-                            self.party_toast_position_combo.setCurrentText(party_toast_config["position"])                       
+                            self.party_toast_position_combo.setCurrentText(str(party_toast_config["position"]))                       
                         if hasattr(self, 'party_toast_size_combo') and "size" in party_toast_config:
-                            self.party_toast_size_combo.setCurrentText(party_toast_config["size"])                       
+                            self.party_toast_size_combo.setCurrentText(str(party_toast_config["size"]))                       
                         if hasattr(self, 'party_toast_duration_combo') and "duration" in party_toast_config:
-                            self.party_toast_duration_combo.setCurrentText(party_toast_config["duration"])                          
+                            self.party_toast_duration_combo.setCurrentText(str(party_toast_config["duration"]))                          
                         if hasattr(self, 'party_toast_max_stack_combo') and "max_stack" in party_toast_config:
                             self.party_toast_max_stack_combo.setCurrentText(str(party_toast_config["max_stack"]))
                     
@@ -3459,7 +3459,15 @@ class MainWindow(QMainWindow):
         """Toggle between showing and hiding the application"""
         if self.isVisible():
             # Currently visible, hide it
+            # Important: Don't call hide() directly because closeEvent handles tray behavior
+            # Instead we'll set our own internal flag to keep the application running in the background
             self.hide()
+            
+            # Make sure our toast manager stays active when minimized
+            if hasattr(self, 'toast_manager') and self.toast_manager:
+                # Refresh any existing toasts to ensure they remain visible
+                self.toast_manager._position_toasts()
+            
             self.show_hide_action.setText("Show from Tray")
             if self.logger:
                 self.logger.log_info("Application hidden to tray")
@@ -3535,18 +3543,17 @@ class MainWindow(QMainWindow):
                     if hasattr(self, 'logger') and self.logger:
                         self.logger.log_error(f"Error stopping watcher during close: {str(e)}")
             
-            # First check if there is still a toast_manager (might have been freed)
-            if hasattr(self, 'toast_manager') and self.toast_manager:
-                try:
-                    self.toast_manager.cleanup()
-                except Exception as e:
-                    if hasattr(self, 'logger') and self.logger:
-                        self.logger.log_error(f"Error cleaning up toast manager: {str(e)}")
-                
             # Check if window was closed by X button - hide to tray if tray icon is available
             # Close action from menu will use force_exit and bypass this
             if hasattr(self, 'tray_icon') and self.tray_icon and self.tray_icon.isVisible():
                 self.hide()
+                
+                # DO NOT clean up toast manager when hiding to tray
+                # This is key to keep toast notifications working while minimized
+                
+                # Make sure any existing toasts remain visible by refreshing their positions
+                if hasattr(self, 'toast_manager') and self.toast_manager:
+                    self.toast_manager._position_toasts()
                 
                 # Update the show/hide action text
                 if hasattr(self, 'show_hide_action'):
@@ -3558,6 +3565,14 @@ class MainWindow(QMainWindow):
 
             else:
                 # No tray icon, perform final cleanup
+                # First check if there is still a toast_manager (might have been freed)
+                if hasattr(self, 'toast_manager') and self.toast_manager:
+                    try:
+                        self.toast_manager.cleanup()
+                    except Exception as e:
+                        if hasattr(self, 'logger') and self.logger:
+                            self.logger.log_error(f"Error cleaning up toast manager: {str(e)}")
+                            
                 if hasattr(self, 'watcher') and self.watcher:
                     try:
                         self.watcher.stop()

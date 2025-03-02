@@ -305,7 +305,11 @@ function Build-Executable {
         "--distpath", $paths.Dist,
         "--workpath", $paths.Temp,
         "--name", $config.AppName,
-        "--version-file", $paths.VersionInfo
+        "--version-file", $paths.VersionInfo,
+        "--noupx",  # Disable UPX compression which often triggers AV
+        "--noconsole",  # Reduces suspicious behavior flags
+        "--disable-windowed-traceback",  # Reduces file size and suspicious patterns
+        "--uac-admin"  # Proper Windows UAC handling
     )
     
     if ($PSCmdlet.MyInvocation.BoundParameters["DebugMode"]) {
@@ -603,6 +607,32 @@ https://github.com/PINKgeekPDX/VerseWatcher/issues
     return $reportPath
 }
 
+function Generate-HashVerification {
+    param([string]$ExecutablePath)
+    
+    Write-Step "Generating Hash Verification"
+    
+    $hashPath = Join-Path $paths.Dist "checksum.txt"
+    $hash = Get-FileHash -Path $ExecutablePath -Algorithm SHA256
+    
+    # Generate verification file
+    @"
+VerseWatcher Executable Verification
+==================================
+File: $($config.AppName).exe
+Version: $($config.Version)
+Build Date: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+SHA256: $($hash.Hash)
+
+To verify this file:
+1. Open PowerShell
+2. Run: Get-FileHash "path\to\VerseWatcher.exe" -Algorithm SHA256
+3. Compare the hash with the one above
+"@ | Out-File -FilePath $hashPath -Encoding utf8
+    
+    Write-Success "Hash verification file generated: checksum.txt"
+}
+
 # Main build process
 try {
     Write-Host "`n=== VerseWatcher Build Process ===" -ForegroundColor Magenta
@@ -638,6 +668,11 @@ try {
     Write-Host "`n=== Build Completed Successfully ===" -ForegroundColor Magenta
     Write-Host "Executable location: $exePath" -ForegroundColor Green
     Write-Host "Build report saved to: $reportPath" -ForegroundColor Green
+    
+    # Add after successful build
+    if ($exePath) {
+        Generate-HashVerification -ExecutablePath $exePath
+    }
     
     # Return success and report path to the batch script
     return @{

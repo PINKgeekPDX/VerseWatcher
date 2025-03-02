@@ -1,0 +1,11 @@
+﻿VerseWatcher Executable Verification
+==================================
+File: VerseWatcher.exe
+Version: a1.0.1
+Build Date: 2025-03-01 19:51:23
+SHA256: BF0D2F7D495ABCD76FF81991758DBBA2EE95BEA2F7DE1672743C6EC57CBC0DA0
+
+To verify this file:
+1. Open PowerShell
+2. Run: Get-FileHash "path\to\VerseWatcher.exe" -Algorithm SHA256
+3. Compare the hash with the one above

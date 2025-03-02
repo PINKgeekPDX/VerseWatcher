@@ -1,6 +1,8 @@
 import os
 import re
+import time
 from datetime import datetime
+from collections import deque
 
 from PyQt5.QtCore import QTimer
 
@@ -48,19 +50,23 @@ class GameLogWatcher:
             
             self.observer = None
             self.event_handler = None
-            self.last_position = 0
-            self.is_running = False  # Add a flag to track if watcher is running
+            self.is_running = False  # Flag to track if watcher is running
             self.kill_counts = {}  # Track kills for killstreak notifications
+            
+            # Enhanced tracking mechanism with buffer
+            self.file_size = 0  # Current known file size
+            self.buffer_size = 500  # Increased buffer size to catch more duplicates
+            self.line_buffer = deque(maxlen=self.buffer_size)  # Circular buffer of recently processed lines
+            self.last_read_time = 0  # Time of last successful read
+            self.last_line_fragment = ""  # Store any partial line from previous read
+            self.consecutive_errors = 0  # Track consecutive read errors
 
             # Create timer in the main thread (parented to main_window)
-            # Using a weak reference pattern to avoid circular references
             self.timer = QTimer(main_window)
-            self.timer.setInterval(500)  # 500ms interval for checking new events (reduced frequency)
+            self.timer.setInterval(250)  # Faster interval to catch more events
             self.timer.timeout.connect(self.check_file)
 
-            # Death event pattern – using the known working pattern.
-            # Note: the direction vector groups (dirvecx, dirvecy, dirvecz) are captured
-            # but will be removed.
+            # Death event pattern – using the known working pattern
             self.death_pattern = re.compile(
                 r"^(?P<timestamp>\S+)\s+\[Notice\]\s+<Actor Death> CActor::Kill:\s+"
                 r"\'(?P<vname>[^\']+)\'\s+\[\d+\]\s+in zone\s+\'(?P<vship>[^\']+)\'\s+"
@@ -73,12 +79,6 @@ class GameLogWatcher:
             self.logger.log_debug(f"GameLogWatcher initialized with game_path: {game_path}")
             self.logger.log_debug(f"Looking for log file at: {self.log_file}")
 
-            # Set up the last position file path
-            self.last_position_file = os.path.join(game_path, "last_position.txt")
-            
-            # Load last position from file if available
-            self._load_last_position()
-
         except Exception as e:
             if self.logger:
                 self.logger.log_error(f"Error initializing GameLogWatcher: {str(e)}")
@@ -86,115 +86,143 @@ class GameLogWatcher:
                 self.logger.log_error(traceback.format_exc())
             raise
 
-    def _load_last_position(self):
-        """Safely load the last position from file"""
-        if os.path.exists(self.last_position_file):
-            try:
-                with open(self.last_position_file, "r") as f:
-                    self.last_position = int(f.read().strip() or "0")
-                self.logger.log_info(f"Loaded last position from file: {self.last_position}")
-            except Exception as e:
-                self.logger.log_error(f"Error loading last position: {str(e)}")
-                self.last_position = 0
-        else:
-            self.last_position = 0
-
     def check_file(self):
         """Check for new events in the log file and process them."""
-        # First check if we're supposed to be running
+        # Check if we're supposed to be running
         if not self.is_running:
             return
             
+        # Rate limiting to avoid excessive file reads
+        current_time = time.time()
+        if current_time - self.last_read_time < 0.1:  # Reduced to catch events faster
+            return
+            
         try:
-            # Check if file exists before attempting to open
+            # Reset consecutive errors counter on successful execution
+            self.consecutive_errors = 0
+            
+            # Check if file exists
             if not os.path.exists(self.log_file):
                 self.logger.log_warning(f"Log file not found: {self.log_file}")
                 return
 
-            # Track how many lines we process in this check to avoid excessive CPU usage
-            lines_processed = 0
-            max_lines_per_check = 1000  # Limit lines processed per check to prevent freezing
-
             # Get current file size
             try:
-                file_size = os.path.getsize(self.log_file)
+                current_size = os.path.getsize(self.log_file)
             except OSError as e:
                 self.logger.log_error(f"Error getting file size: {str(e)}")
                 return
-
-            # If file has been truncated, reset position
-            if file_size < self.last_position:
-                self.logger.log_info(f"Log file truncated, resetting position from {self.last_position} to 0")
-                self.last_position = 0
-
-            # Retry counter for file access issues
-            retry_count = 0
-            max_retries = 3
+                
+            # If file hasn't changed, nothing to do
+            if current_size == self.file_size and self.file_size > 0:
+                return
+                
+            # If file has been truncated (smaller than before), reset tracking
+            if current_size < self.file_size:
+                self.logger.log_info(f"Log file has been truncated or rotated, restarting from end")
+                self.file_size = current_size
+                self.line_buffer.clear()
+                self.last_line_fragment = ""
+                return
             
-            while retry_count < max_retries and self.is_running:
-                try:
-                    with open(self.log_file, "r", encoding="utf-8", errors="replace") as f:
-                        # Seek to the last read position
-                        f.seek(self.last_position)
-                        
-                        # Process each new line
-                        for line in f:
-                            # Check if we've been stopped mid-processing
-                            if not self.is_running:
-                                return
-                                
-                            self.process_line(line.strip())
-                            lines_processed += 1
-                            
-                            # Avoid processing too many lines at once to prevent UI freezing
-                            if lines_processed >= max_lines_per_check:
-                                self.logger.log_warning(f"Reached maximum lines per check ({max_lines_per_check}), will continue in next cycle")
-                                break
-                                
-                        # Update the last position
-                        self.last_position = f.tell()
-                        
-                    # If we made it here, the read was successful
-                    break
+            # Safety check - don't try to read too much new data at once
+            # If file grew by more than 5MB since last check, read in chunks
+            max_read_size = 5 * 1024 * 1024  # 5MB
+            bytes_to_read = current_size - self.file_size
+            if bytes_to_read > max_read_size and self.file_size > 0:
+                self.logger.log_warning(f"File grew too much ({bytes_to_read / 1024:.1f}KB), reading in chunks")
+                # We'll read in max_read_size chunks
+                bytes_to_read = max_read_size
+            
+            # Update last read time
+            self.last_read_time = current_time
+            
+            # We have new content to process
+            try:
+                with open(self.log_file, 'r', encoding='utf-8', errors='replace') as f:
+                    # If this is the first time, jump to the end
+                    if self.file_size == 0:
+                        f.seek(0, 2)  # Seek to end of file
+                        self.file_size = current_size
+                        self.logger.log_info(f"First time processing log, starting from end of file (size: {current_size})")
+                        return
                     
-                except PermissionError:
-                    # File might be locked by the game, retry
-                    retry_count += 1
-                    if retry_count < max_retries:
-                        self.logger.log_warning(f"Permission error when reading log file, retrying ({retry_count}/{max_retries})...")
-                        # Small delay before retry
-                        QTimer.singleShot(50, lambda: None)
-                    else:
-                        self.logger.log_error(f"Failed to read log file after {max_retries} attempts")
-                except Exception as e:
-                    self.logger.log_error(f"Error reading log file: {str(e)}")
-                    break
-
-            # Only save position if we're still running
-            if self.is_running:
-                self._save_last_position()
-
+                    # Seek to where we left off
+                    f.seek(self.file_size)
+                    
+                    # Read new content
+                    new_content = f.read(bytes_to_read)
+                    
+                    # Handle line fragments from previous read
+                    if self.last_line_fragment:
+                        new_content = self.last_line_fragment + new_content
+                        self.last_line_fragment = ""
+                    
+                    # Check if the content ends with a complete line
+                    if new_content and not new_content.endswith('\n'):
+                        # Find the last newline
+                        last_newline = new_content.rfind('\n')
+                        if last_newline >= 0:
+                            # Store the fragment for next read
+                            self.last_line_fragment = new_content[last_newline + 1:]
+                            # Process only complete lines
+                            new_content = new_content[:last_newline + 1]
+                        else:
+                            # No newline found, store everything as fragment
+                            self.last_line_fragment = new_content
+                            new_content = ""
+                    
+                    # Split content into lines
+                    new_lines = new_content.splitlines()
+                    
+                    # Count lines for logging
+                    line_count = len(new_lines)
+                    if line_count > 0:
+                        self.logger.log_debug(f"Processing {line_count} new lines from log file")
+                    
+                    # Process new lines and add to buffer
+                    for line in new_lines:
+                        line = line.strip()
+                        # Skip empty lines
+                        if not line:
+                            continue
+                        
+                        # Skip if this exact line is in our recent buffer (duplicate prevention)
+                        if line in self.line_buffer:
+                            continue
+                            
+                        # Add to buffer
+                        self.line_buffer.append(line)
+                        
+                        # Process the line
+                        self.process_line(line)
+                    
+                    # Update file size after successfully processing
+                    self.file_size += bytes_to_read
+                    
+                    # If we read a chunk and there's more to read, trigger another check soon
+                    if bytes_to_read == max_read_size and current_size > self.file_size:
+                        QTimer.singleShot(100, self.check_file)
+                    
+            except Exception as e:
+                self.consecutive_errors += 1
+                self.logger.log_error(f"Error reading log file (attempt {self.consecutive_errors}): {str(e)}")
+                
+                # If there have been too many consecutive errors, reset tracking
+                if self.consecutive_errors > 5:
+                    self.logger.log_warning("Too many consecutive errors, resetting file tracking")
+                    self.file_size = 0
+                    self.line_buffer.clear()
+                    self.last_line_fragment = ""
+                    self.consecutive_errors = 0
+                
+                import traceback
+                self.logger.log_error(traceback.format_exc())
+                
         except Exception as e:
             self.logger.log_error(f"Error in check_file: {str(e)}")
             import traceback
             self.logger.log_error(traceback.format_exc())
-    
-    def _save_last_position(self):
-        """Safely save the last position to file"""
-        try:
-            # Create a temp file and then rename for atomic write
-            temp_file = self.last_position_file + ".tmp"
-            with open(temp_file, "w") as f:
-                f.write(str(self.last_position))
-            
-            # Replace the old file with the new one (atomic operation)
-            if os.path.exists(self.last_position_file):
-                os.replace(temp_file, self.last_position_file)
-            else:
-                os.rename(temp_file, self.last_position_file)
-                
-        except Exception as e:
-            self.logger.log_error(f"Error saving last position: {str(e)}")
 
     def start(self):
         """Start watching the game log file for new events."""
@@ -212,40 +240,30 @@ class GameLogWatcher:
                     self.toast_manager.show_error_toast(f"❌ {error_msg}")
                 return False
 
+            # Reset tracking variables
+            self.file_size = 0  # Start from the end
+            self.line_buffer.clear()
+            self.last_read_time = 0
+            self.last_line_fragment = ""
+            self.consecutive_errors = 0
+            
+            # Set running flag
+            self.is_running = True
+            
+            # Start timer with safety check
             try:
-                # Set the initial file position to the end so that only new events are processed
-                with open(self.log_file, "r", encoding="utf-8", errors="replace") as f:
-                    f.seek(0, 2)  # Seek to the end of the file
-                    self.last_position = f.tell()
-                self.logger.log_info(
-                    f"Starting to watch new events from position {self.last_position}"
-                )
-
-                # Set running flag
-                self.is_running = True
-                
-                # Start timer with safety check
-                try:
-                    if hasattr(self, 'timer') and self.timer and not self.timer.isActive():
-                        self.timer.start()
-                        self.logger.log_info("File watching timer started successfully")
-                except Exception as e:
-                    self.logger.log_error(f"Error starting timer: {str(e)}")
-                    self.is_running = False
-                    return False
-
-                # Show a startup success toast
-                if hasattr(self, 'toast_manager') and self.toast_manager:
-                    self.toast_manager.show_info_toast("🎮 Started watching for new game events ✨")
-                return True
-
-            except (IOError, OSError) as e:
-                error_msg = f"Error accessing game log: {str(e)}"
-                self.logger.log_error(error_msg)
-                if hasattr(self, 'toast_manager') and self.toast_manager:
-                    self.toast_manager.show_error_toast(f"⚠️ {error_msg}")
+                if hasattr(self, 'timer') and self.timer and not self.timer.isActive():
+                    self.timer.start()
+                    self.logger.log_info("File watching timer started successfully")
+            except Exception as e:
+                self.logger.log_error(f"Error starting timer: {str(e)}")
                 self.is_running = False
                 return False
+
+            # Show a startup success toast
+            if hasattr(self, 'toast_manager') and self.toast_manager:
+                self.toast_manager.show_info_toast("🎮 Started watching for new game events ✨")
+            return True
 
         except Exception as e:
             error_msg = f"Failed to start watching: {str(e)}"
@@ -262,25 +280,20 @@ class GameLogWatcher:
             return False
 
     def stop(self):
-        """Stop watching the game log file and save the last read position."""
+        """Stop watching the game log file."""
         try:
             # First mark as not running to stop processing in check_file
             self.is_running = False
             
-            # Disconnect the timer signal first
+            # Stop the timer if active
             try:
                 if hasattr(self, 'timer') and self.timer:
-                    # Only try to disconnect if the timer is active
+                    # Only try to stop if the timer is active
                     if self.timer.isActive():
                         self.timer.stop()
-                        # Don't try to manually disconnect the timeout signal
-                        # Just stopping the timer is sufficient
                         self.logger.log_info("File watching timer stopped successfully")
             except Exception as e:
                 self.logger.log_error(f"Error stopping timer: {str(e)}")
-
-            # Save the last position
-            self._save_last_position()
             
         except Exception as e:
             self.logger.log_error(f"Error stopping watcher: {str(e)}")
@@ -290,9 +303,6 @@ class GameLogWatcher:
     def process_line(self, line):
         """Process a single line from the log file and trigger events accordingly."""
         try:
-            # Remove the general debug logging of every line
-            # self.logger.log_debug(f"Processing log line: {line[:100]}..." if len(line) > 100 else f"Processing log line: {line}")
-            
             # Attempt to match a death event via regex
             death_match = self.death_pattern.match(line)
             if death_match:

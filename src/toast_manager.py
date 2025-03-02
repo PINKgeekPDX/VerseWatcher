@@ -28,10 +28,21 @@ class Toast(QWidget):
     def __init__(self, message, bg_color=QColor(11, 18, 24, 230)):
         super().__init__(None)
 
-        # Set window flags for a frameless, always-on-top window
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
+        # Set window flags to ensure toast appears even when app is minimized
+        # Tool flag ensures it doesn't appear in taskbar
+        # Qt.WindowDoesNotAcceptFocus ensures it doesn't steal focus
+        # SubWindow flag ensures it appears above other windows
+        self.setWindowFlags(
+            Qt.FramelessWindowHint | 
+            Qt.WindowStaysOnTopHint | 
+            Qt.Tool | 
+            Qt.WindowDoesNotAcceptFocus | 
+            Qt.SubWindow
+        )
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setAttribute(Qt.WA_ShowWithoutActivating)
+        # Prevent toast from stealing focus from games
+        self.setAttribute(Qt.WA_X11DoNotAcceptFocus, True)
 
         # Create layout
         layout = QVBoxLayout(self)
@@ -128,7 +139,13 @@ class Toast(QWidget):
         border_gradient.setColorAt(0.5, QColor(255, 255, 255, 80))
         border_gradient.setColorAt(1, QColor(255, 255, 255, 40))
         painter.strokePath(path, QPen(border_gradient, 1))
-
+        
+    def showEvent(self, event):
+        """Ensure toast is shown even when app is minimized"""
+        super().showEvent(event)
+        # Make sure the toast is always on top, even over fullscreen games
+        self.raise_()
+        
 
 class ToastManager:
     def __init__(self, parent=None):
@@ -229,8 +246,11 @@ class ToastManager:
             # Add to active toasts list
             self.toasts.append(toast)
             
-            # Show toast
+            # Show toast - make sure to set always on top
             toast.show()
+            
+            # Make sure the toast is always raised above other windows
+            toast.raise_()
             
             # Position all toasts
             self._position_toasts()
