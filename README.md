@@ -1,5 +1,6 @@
 # [ Verse Watcher ]
 # - Star Citizen Event Tool -
+http://www.versewatcher.com/
 
 **A real-time game.log monitoring tool I've made for Star Citizen.** 
 
