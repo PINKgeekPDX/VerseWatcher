@@ -1,4 +1,7 @@
 # [ Verse Watcher ]
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/1bf1ade8f7764270809c7b504af80885)](https://app.codacy.com/gh/PINKgeekPDX/VerseWatcher?utm_source=github.com&utm_medium=referral&utm_content=PINKgeekPDX/VerseWatcher&utm_campaign=Badge_Grade)
+
 # - Star Citizen Event Tool -
 http://www.versewatcher.com/
 
