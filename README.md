@@ -1,6 +1,7 @@
+# [ NOTE: This project is on hold currently as changes made by CIG several patches back made this sort of app no longer work due to some people exploiting the Game.log information and using it for bad intentions, so unfortunately it killed all tracking apps at the same time. If in the future they turn this data output to game.log back on, I plan to continue work on this app. Sorry everyone :( ]
+
 # [ Verse Watcher ]
 # - Star Citizen Event Tool -
-http://www.versewatcher.com/
 
 **A real-time game.log monitoring tool I've made for Star Citizen.** 
 
