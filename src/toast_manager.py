@@ -4,11 +4,13 @@ try:
 except ImportError:
     WIN32API_AVAILABLE = False
 
-from PyQt5.QtCore import QRectF, Qt, QTimer
-from PyQt5.QtGui import QColor, QLinearGradient, QPainter, QPainterPath, QPen
-from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
+from PyQt5.QtCore import QRectF, Qt, QTimer, QUrl
+from PyQt5.QtGui import QColor, QDesktopServices, QLinearGradient, QPainter, QPainterPath, QPen
+from PyQt5.QtWidgets import QApplication, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 from datetime import datetime, timedelta
 import sip
+
+from i18n import T
 
 
 def get_real_monitor_rect():
@@ -54,6 +56,7 @@ class Toast(QWidget):
             title = message.get("title", "")
             details = message.get("details", "")
             event_type = message.get("type", "info")
+            profile_url = message.get("profile_url")
 
             # For death events, extract only the essential info
             if "weapon" in details:
@@ -66,6 +69,7 @@ class Toast(QWidget):
         else:
             title = message
             event_type = "info"
+            profile_url = None
 
         # Set color based on event type
         text_color = {
@@ -93,7 +97,35 @@ class Toast(QWidget):
             padding: 2px;
             background: transparent;
         """)
-        layout.addWidget(self.label)
+        if profile_url:
+            title_layout = QHBoxLayout()
+            title_layout.setSpacing(8)
+            title_layout.addWidget(self.label, 1)
+
+            profile_button = QPushButton(T("VIEW_RSI_PROFILE"))
+            profile_button.setCursor(Qt.PointingHandCursor)
+            profile_button.setStyleSheet("""
+                QPushButton {
+                    color: white;
+                    background: rgba(0, 119, 170, 0.9);
+                    border: 1px solid #40C4FF;
+                    border-radius: 3px;
+                    padding: 3px 7px;
+                    font-size: 10px;
+                }
+                QPushButton:hover {
+                    background: #0077AA;
+                }
+            """)
+            profile_button.clicked.connect(
+                lambda checked=False, url=profile_url: QDesktopServices.openUrl(QUrl(url))
+            )
+            self.profile_button = profile_button
+            title_layout.addWidget(profile_button)
+            layout.addLayout(title_layout)
+        else:
+            self.profile_button = None
+            layout.addWidget(self.label)
 
         self.bg_color = bg_color
 
