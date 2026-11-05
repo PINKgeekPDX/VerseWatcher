@@ -1,6 +1,47 @@
 from __future__ import annotations
 
+import os
+
 from PyQt5.QtCore import Qt
+
+from i18n import TRANSLATIONS
+
+
+def _combo_value(combo, default):
+    """Return a selector's stable value, falling back for legacy widgets."""
+    if combo is None:
+        return default
+    value = combo.currentData()
+    return value if value is not None else (combo.currentText() or default)
+
+
+def _set_combo_value(combo, value):
+    """Select an option using canonical values or labels persisted by older versions."""
+    value = str(value)
+    index = combo.findData(value)
+    if index < 0:
+        index = combo.findText(value, Qt.MatchFixedString)
+
+    if index < 0:
+        try:
+            seconds = str(int(value.split()[0]))
+        except (ValueError, IndexError):
+            seconds = None
+        if seconds is not None:
+            index = combo.findData(seconds)
+
+    if index < 0:
+        for item_index in range(combo.count()):
+            translation_key = combo.itemData(item_index, Qt.UserRole + 1)
+            if translation_key and any(
+                translations.get(translation_key) == value
+                for translations in TRANSLATIONS.values()
+            ):
+                index = item_index
+                break
+
+    if index >= 0:
+        combo.setCurrentIndex(index)
 
 
 def build_settings_snapshot(window):
@@ -17,15 +58,17 @@ def build_settings_snapshot(window):
             "party_events": window.party_events_check.isChecked() if hasattr(window, 'party_events_check') and window.party_events_check is not None else True,
         },
         "toast_config": {
-            "position": window.toast_position_combo.currentText() if hasattr(window, 'toast_position_combo') and window.toast_position_combo is not None else "Bottom Right",
-            "size": window.toast_size_combo.currentText() if hasattr(window, 'toast_size_combo') and window.toast_size_combo is not None else "Medium",
-            "duration": window.toast_duration_combo.currentText() if hasattr(window, 'toast_duration_combo') and window.toast_duration_combo is not None else "5 seconds",
+            "position": _combo_value(getattr(window, 'toast_position_combo', None), "Bottom Right"),
+            "size": _combo_value(getattr(window, 'toast_size_combo', None), "Medium"),
+            "duration": _combo_value(getattr(window, 'toast_duration_combo', None), "5"),
             "max_stack": window.toast_max_stack_combo.currentText() if hasattr(window, 'toast_max_stack_combo') and window.toast_max_stack_combo is not None else "5",
         },
         "party_toast_config": {
-            "position": window.party_toast_position_combo.currentText() if hasattr(window, 'party_toast_position_combo') and window.party_toast_position_combo is not None else "Top Right",
-            "size": window.party_toast_size_combo.currentText() if hasattr(window, 'party_toast_size_combo') and window.party_toast_size_combo is not None else "Medium",
-            "duration": window.party_toast_duration_combo.currentText() if hasattr(window, 'party_toast_duration_combo') and window.party_toast_duration_combo is not None else "5 seconds",
+            "position": _combo_value(
+                getattr(window, 'party_toast_position_combo', None), "Top Right"
+            ),
+            "size": _combo_value(getattr(window, 'party_toast_size_combo', None), "Medium"),
+            "duration": _combo_value(getattr(window, 'party_toast_duration_combo', None), "5"),
             "max_stack": window.party_toast_max_stack_combo.currentText() if hasattr(window, 'party_toast_max_stack_combo') and window.party_toast_max_stack_combo is not None else "5",
         },
         "party_members": getattr(window, 'party_members', []),
@@ -61,21 +104,21 @@ def apply_loaded_settings(window, settings):
 
     toast_config = settings.get("toast_config", {})
     if hasattr(window, 'toast_position_combo') and "position" in toast_config:
-        window.toast_position_combo.setCurrentText(toast_config["position"])
+        _set_combo_value(window.toast_position_combo, toast_config["position"])
     if hasattr(window, 'toast_size_combo') and "size" in toast_config:
-        window.toast_size_combo.setCurrentText(toast_config["size"])
+        _set_combo_value(window.toast_size_combo, toast_config["size"])
     if hasattr(window, 'toast_duration_combo') and "duration" in toast_config:
-        window.toast_duration_combo.setCurrentText(toast_config["duration"])
+        _set_combo_value(window.toast_duration_combo, toast_config["duration"])
     if hasattr(window, 'toast_max_stack_combo') and "max_stack" in toast_config:
         window.toast_max_stack_combo.setCurrentText(str(toast_config["max_stack"]))
 
     party_toast_config = settings.get("party_toast_config", {})
     if hasattr(window, 'party_toast_position_combo') and "position" in party_toast_config:
-        window.party_toast_position_combo.setCurrentText(str(party_toast_config["position"]))
+        _set_combo_value(window.party_toast_position_combo, party_toast_config["position"])
     if hasattr(window, 'party_toast_size_combo') and "size" in party_toast_config:
-        window.party_toast_size_combo.setCurrentText(str(party_toast_config["size"]))
+        _set_combo_value(window.party_toast_size_combo, party_toast_config["size"])
     if hasattr(window, 'party_toast_duration_combo') and "duration" in party_toast_config:
-        window.party_toast_duration_combo.setCurrentText(str(party_toast_config["duration"]))
+        _set_combo_value(window.party_toast_duration_combo, party_toast_config["duration"])
     if hasattr(window, 'party_toast_max_stack_combo') and "max_stack" in party_toast_config:
         window.party_toast_max_stack_combo.setCurrentText(str(party_toast_config["max_stack"]))
 
@@ -150,16 +193,24 @@ def save_app_settings(window):
 
 def load_app_settings(window):
     """Load persisted settings into the current UI window."""
+    settings_path = window.config.settings_file
+    if not os.path.exists(settings_path):
+        if getattr(window, 'logger', None):
+            window.logger.log_info("No settings file found, using defaults")
+        return False
+
     try:
         settings = window.config.load_settings()
         if not settings:
             if getattr(window, 'logger', None):
-                window.logger.log_info("No settings file found, using defaults")
+                window.logger.log_info("Settings file is empty, using defaults")
             return False
 
         apply_loaded_settings(window, settings)
         return True
     except Exception as exc:
         if getattr(window, 'logger', None):
-            window.logger.log_error(f"Error loading settings: {str(exc)}")
+            window.logger.log_error(
+                f"Error loading settings from {settings_path}: {exc}"
+            )
         return False

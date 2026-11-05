@@ -82,7 +82,50 @@ TRANSLATIONS = {
         "TRAY_INACTIVE": "VerseWatcher - Inactive",
         "APP_VERSION": "Alpha version 1.0.12 · Modified by Bambu666",
         "ABOUT_DESCRIPTION": "Verse Watcher is an event tracking and notification tool designed for Star Citizen, monitoring events and party activities throughout the verse in real time.",
-        "ABOUT_FEATURES": "-----------------------\n## CURRENT FEATURES ##\n-----------------------\n\n> Real-time combat tracking of Game.log events\n> Detailed kill stats and engagement reports for all players, party members and org mates\n> Party member activity monitoring and notification system\n> Non-intrusive toast notifications\n> Persistent session history for all tracked events",
+        "ABOUT_FEATURES": (
+            "-----------------------\n## CURRENT FEATURES ##\n-----------------------\n\n"
+            "> Real-time tracking of Game.log events\n"
+            "> Detailed kill statistics and engagement reports for players, party members, "
+            "and org mates\n"
+            "> Party member activity monitoring and notifications\n"
+            "> Visible, non-intrusive toast notifications\n"
+            "> Persistent session and event history\n\n"
+            "------------------------------------------\n## PLANNED FEATURES ##\n"
+            "------------------------------------------\n\n"
+            "> Improvements to the real-time overlay and game metrics\n"
+            "> More advanced theme and interface customization\n"
+            "> Sound alerts for events and toast notifications\n"
+            "> More event types and combat analysis\n"
+            "> Official application installer and updater\n\n"
+            "---------------------------------------------------------------------\n"
+            "Have ideas for new features or working on something similar?\n"
+            "Let's talk!\n"
+            "---------------------------------------------------------------------"
+        ),
+        "ABOUT_CREDITS": (
+            "-------------------------------------------------------------------------------\n"
+            "| Multimedia development and design:\n"
+            "-------------------------------------------------------------------------------\n"
+            "|\n|   - PINKgeekPDX\n|\n"
+            "-------------------------------------------------------------------------------\n"
+            "| Contributors:\n"
+            "-------------------------------------------------------------------------------\n"
+            "|\n|   - Anemoi\n"
+            "|     (Extensive testing and great ideas turned into real features)\n|\n"
+            "|   -----------------------\n|\n"
+            "|   - rouvipouvi\n"
+            "|     (A dear friend who helps polish this tool)\n|\n"
+            "-------------------------------------------------------------------------------\n"
+            "| Special thanks:\n"
+            "-------------------------------------------------------------------------------\n"
+            "|\n"
+            "|   - The Star Citizen community for its feedback and ideas.\n|\n"
+            "|   -----------------------\n|\n"
+            "|   - CIG for creating such a vast and complex game and for its "
+            "continued commitment.\n|\n"
+            "|   -----------------------\n|\n"
+            "|   - CIG for supporting the community and offering a unique experience."
+        ),
         "CURRENT_FEATURES_AND_PLANNED": "CURRENT FEATURES AND PLANNED",
         "GETTING_STARTED": "GETTING STARTED",
         "ABOUT_USAGE_TEXT": "1. Configure your Star Citizen installation directory in the settings tab\n\n2. Set your in-game character handle in the settings tab (case sensitive)\n\n3. Configure your toast and party notification settings\n\n4. Manually add your party members to the party list\n\n5. Press the 'Start Monitoring' button to begin tracking and notifications\n\n6. Press the 'Stop Monitoring' button to stop tracking and notifications\n\n7. Press the 'Clear Console' button to clear the console output\n\n8. Press the 'Save Log' button to save the console output to a file",
@@ -189,7 +232,50 @@ TRANSLATIONS = {
         "TRAY_INACTIVE": "VerseWatcher - Inactivo",
         "APP_VERSION": "Versión alfa 1.0.12 · Modificada por Bambu666",
         "ABOUT_DESCRIPTION": "Verse Watcher es una herramienta de seguimiento de eventos y notificaciones para Star Citizen que monitoriza eventos y actividades del grupo en tiempo real a lo largo de la verse.",
-        "ABOUT_FEATURES": "-----------------------\n## CARACTERÍSTICAS ACTUALES ##\n-----------------------\n\n> Seguimiento en tiempo real de los eventos de Game.log\n> Estadísticas detalladas de muertes y enfrentamientos\n> Monitorización de la actividad del grupo y notificaciones\n> Notificaciones emergentes discretas\n> Historial persistente de sesiones y eventos",
+        "ABOUT_FEATURES": (
+            "-----------------------\n## CARACTERÍSTICAS ACTUALES ##\n-----------------------\n\n"
+            "> Seguimiento en tiempo real de los eventos de Game.log\n"
+            "> Estadísticas detalladas de muertes y enfrentamientos\n"
+            "> Monitorización y notificaciones de la actividad del grupo\n"
+            "> Notificaciones emergentes discretas pero visibles\n"
+            "> Historial persistente de sesiones y eventos\n\n"
+            "------------------------------------------\n## FUNCIONES PREVISTAS ##\n"
+            "------------------------------------------\n\n"
+            "> Mejoras en la superposición en tiempo real y métricas del juego\n"
+            "> Personalización más avanzada del tema y la interfaz\n"
+            "> Notificaciones con alertas de sonido para eventos y notificaciones "
+            "emergentes\n"
+            "> Más tipos de eventos y análisis de combate\n"
+            "> Instalador y actualizador oficiales de la aplicación\n\n"
+            "---------------------------------------------------------------------\n"
+            "¿Tienes ideas de nuevas funciones o estás desarrollando algo parecido?\n"
+            "¡Hablemos!\n"
+            "---------------------------------------------------------------------"
+        ),
+        "ABOUT_CREDITS": (
+            "-------------------------------------------------------------------------------\n"
+            "| Desarrollo y diseño multimedia:\n"
+            "-------------------------------------------------------------------------------\n"
+            "|\n|   - PINKgeekPDX\n|\n"
+            "-------------------------------------------------------------------------------\n"
+            "| Colaboradores:\n"
+            "-------------------------------------------------------------------------------\n"
+            "|\n|   - Anemoi\n"
+            "|     (Pruebas exhaustivas y grandes ideas convertidas en funciones reales)\n|\n"
+            "|   -----------------------\n|\n"
+            "|   - rouvipouvi\n"
+            "|     (Una amiga muy querida que ayuda a pulir esta herramienta)\n|\n"
+            "-------------------------------------------------------------------------------\n"
+            "| Agradecimientos especiales:\n"
+            "-------------------------------------------------------------------------------\n"
+            "|\n"
+            "|   - Toda la comunidad de Star Citizen por sus comentarios e ideas.\n|\n"
+            "|   -----------------------\n|\n"
+            "|   - CIG por crear un juego tan grande y complejo y por su compromiso "
+            "continuo.\n|\n"
+            "|   -----------------------\n|\n"
+            "|   - CIG por apoyar a la comunidad y ofrecer una experiencia única."
+        ),
         "CURRENT_FEATURES_AND_PLANNED": "CARACTERÍSTICAS ACTUALES Y PREVISTAS",
         "GETTING_STARTED": "PRIMEROS PASOS",
         "ABOUT_USAGE_TEXT": "1. Configura el directorio de instalación de Star Citizen en la pestaña de configuración\n\n2. Establece tu nombre de personaje en la pestaña de configuración (sensible a mayúsculas)\n\n3. Configura tus opciones de notificaciones emergentes y del grupo\n\n4. Añade manualmente a los miembros del grupo a la lista del grupo\n\n5. Pulsa el botón 'Iniciar monitorización' para empezar a seguir eventos y notificaciones\n\n6. Pulsa el botón 'Detener monitorización' para dejar de seguir eventos y notificaciones\n\n7. Pulsa el botón 'Limpiar consola' para borrar la salida de la consola\n\n8. Pulsa el botón 'Guardar registro' para guardar la salida de la consola en un archivo",

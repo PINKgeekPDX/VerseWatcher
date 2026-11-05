@@ -150,18 +150,42 @@ def build_settings_tab(window):
     toast_layout.setSpacing(15)
 
     window.toast_position_combo = QComboBox()
-    window.toast_position_combo.addItems([T("TOP_LEFT"), T("TOP_RIGHT"), T("BOTTOM_LEFT"), T("BOTTOM_RIGHT"), T("LEFT_MIDDLE"), T("RIGHT_MIDDLE")])
-    window.toast_position_combo.setCurrentText(T("BOTTOM_RIGHT"))
+    for label_key, canonical_value in (
+        ("TOP_LEFT", "Top Left"),
+        ("TOP_RIGHT", "Top Right"),
+        ("BOTTOM_LEFT", "Bottom Left"),
+        ("BOTTOM_RIGHT", "Bottom Right"),
+        ("LEFT_MIDDLE", "Left Middle"),
+        ("RIGHT_MIDDLE", "Right Middle"),
+    ):
+        index = window.toast_position_combo.count()
+        window.toast_position_combo.addItem(T(label_key), canonical_value)
+        window.toast_position_combo.setItemData(index, label_key, Qt.UserRole + 1)
+    window.toast_position_combo.setCurrentIndex(
+        window.toast_position_combo.findData("Bottom Right")
+    )
     window.toast_position_combo.setStyleSheet("padding: 6px; min-width: 150px;")
 
     window.toast_size_combo = QComboBox()
-    window.toast_size_combo.addItems([T("VERY_SMALL"), T("SMALL"), T("MEDIUM"), T("LARGE"), T("VERY_LARGE")])
-    window.toast_size_combo.setCurrentText(T("MEDIUM"))
+    for label_key, canonical_value in (
+        ("VERY_SMALL", "Very Small"),
+        ("SMALL", "Small"),
+        ("MEDIUM", "Medium"),
+        ("LARGE", "Large"),
+        ("VERY_LARGE", "Very Large"),
+    ):
+        index = window.toast_size_combo.count()
+        window.toast_size_combo.addItem(T(label_key), canonical_value)
+        window.toast_size_combo.setItemData(index, label_key, Qt.UserRole + 1)
+    window.toast_size_combo.setCurrentIndex(window.toast_size_combo.findData("Medium"))
     window.toast_size_combo.setStyleSheet("padding: 6px; min-width: 150px;")
 
     window.toast_duration_combo = QComboBox()
-    window.toast_duration_combo.addItems([f"2 {T('SECONDS')}", f"3 {T('SECONDS')}", f"5 {T('SECONDS')}", f"8 {T('SECONDS')}", f"10 {T('SECONDS')}"])
-    window.toast_duration_combo.setCurrentText(f"5 {T('SECONDS')}")
+    for seconds in (2, 3, 5, 8, 10):
+        window.toast_duration_combo.addItem(
+            f"{seconds} {T('SECONDS')}", str(seconds)
+        )
+    window.toast_duration_combo.setCurrentIndex(window.toast_duration_combo.findData("5"))
     window.toast_duration_combo.setStyleSheet("padding: 6px; min-width: 150px;")
 
     window.toast_max_stack_combo = QComboBox()
@@ -199,18 +223,46 @@ def build_settings_tab(window):
     party_toast_layout.setSpacing(15)
 
     window.party_toast_position_combo = QComboBox()
-    window.party_toast_position_combo.addItems([T("TOP_LEFT"), T("TOP_RIGHT"), T("BOTTOM_LEFT"), T("BOTTOM_RIGHT"), T("LEFT_MIDDLE"), T("RIGHT_MIDDLE")])
-    window.party_toast_position_combo.setCurrentText(T("TOP_RIGHT"))
+    for label_key, canonical_value in (
+        ("TOP_LEFT", "Top Left"),
+        ("TOP_RIGHT", "Top Right"),
+        ("BOTTOM_LEFT", "Bottom Left"),
+        ("BOTTOM_RIGHT", "Bottom Right"),
+        ("LEFT_MIDDLE", "Left Middle"),
+        ("RIGHT_MIDDLE", "Right Middle"),
+    ):
+        index = window.party_toast_position_combo.count()
+        window.party_toast_position_combo.addItem(T(label_key), canonical_value)
+        window.party_toast_position_combo.setItemData(index, label_key, Qt.UserRole + 1)
+    window.party_toast_position_combo.setCurrentIndex(
+        window.party_toast_position_combo.findData("Top Right")
+    )
     window.party_toast_position_combo.setStyleSheet("padding: 6px; min-width: 150px;")
 
     window.party_toast_size_combo = QComboBox()
-    window.party_toast_size_combo.addItems([T("VERY_SMALL"), T("SMALL"), T("MEDIUM"), T("LARGE"), T("VERY_LARGE")])
-    window.party_toast_size_combo.setCurrentText(T("MEDIUM"))
+    for label_key, canonical_value in (
+        ("VERY_SMALL", "Very Small"),
+        ("SMALL", "Small"),
+        ("MEDIUM", "Medium"),
+        ("LARGE", "Large"),
+        ("VERY_LARGE", "Very Large"),
+    ):
+        index = window.party_toast_size_combo.count()
+        window.party_toast_size_combo.addItem(T(label_key), canonical_value)
+        window.party_toast_size_combo.setItemData(index, label_key, Qt.UserRole + 1)
+    window.party_toast_size_combo.setCurrentIndex(
+        window.party_toast_size_combo.findData("Medium")
+    )
     window.party_toast_size_combo.setStyleSheet("padding: 6px; min-width: 150px;")
 
     window.party_toast_duration_combo = QComboBox()
-    window.party_toast_duration_combo.addItems([f"2 {T('SECONDS')}", f"3 {T('SECONDS')}", f"5 {T('SECONDS')}", f"8 {T('SECONDS')}", f"10 {T('SECONDS')}"])
-    window.party_toast_duration_combo.setCurrentText(f"5 {T('SECONDS')}")
+    for seconds in (2, 3, 5, 8, 10):
+        window.party_toast_duration_combo.addItem(
+            f"{seconds} {T('SECONDS')}", str(seconds)
+        )
+    window.party_toast_duration_combo.setCurrentIndex(
+        window.party_toast_duration_combo.findData("5")
+    )
     window.party_toast_duration_combo.setStyleSheet("padding: 6px; min-width: 150px;")
 
     window.party_toast_max_stack_combo = QComboBox()

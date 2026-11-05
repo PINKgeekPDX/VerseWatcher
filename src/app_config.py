@@ -21,11 +21,8 @@ class AppConfig:
     def load_json(self, path: str, default: Any = None) -> Any:
         if not os.path.exists(path):
             return default
-        try:
-            with open(path, "r", encoding="utf-8") as handle:
-                return json.load(handle)
-        except (OSError, ValueError):
-            return default
+        with open(path, "r", encoding="utf-8") as handle:
+            return json.load(handle)
 
     def save_json(self, path: str, payload: Any):
         os.makedirs(os.path.dirname(path), exist_ok=True)

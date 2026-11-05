@@ -932,32 +932,7 @@ class MainWindow(QMainWindow):
         features_layout = QVBoxLayout(features_frame)
         features_layout.setContentsMargins(5, 5, 5, 5)
         features_layout.setSpacing(2)
-        features = [
-            "-----------------------",
-            "## CARACTERÍSTICAS ACTUALES ##",
-            "-----------------------",
-            " ",
-            "> Seguimiento en tiempo real de los eventos de Game.log",
-            "> Estadísticas detalladas de muertes y enfrentamientos",
-            "> Monitorización y notificaciones de la actividad del grupo",
-            "> Notificaciones emergentes discretas pero visibles",
-            "> Historial persistente de sesiones y eventos",
-            " ",
-            "------------------------------------------",
-            "## FUNCIONES PREVISTAS ##",
-            "------------------------------------------",
-            " ",
-            "> Mejoras en la superposición en tiempo real y métricas del juego",
-            "> Personalización más avanzada del tema y la interfaz",
-            "> Notificaciones con alertas de sonido para eventos y toasts",
-            "> Más tipos de eventos y análisis de combate",
-            "> Instalador y actualizador oficiales de la aplicación",
-            " ",
-            "---------------------------------------------------------------------",
-            "¿Tienes ideas de nuevas funciones? ¿Estás desarrollando algo parecido?",
-            "             ¡Hablemos de ello!",
-            "---------------------------------------------------------------------",
-        ]
+        features = T("ABOUT_FEATURES").splitlines()
         for feature in features:
             feature_label = QLabel(feature)
             feature_label.setObjectName("featureLabel")
@@ -979,39 +954,7 @@ class MainWindow(QMainWindow):
         credits_header = QLabel(T("DEVELOPMENT_AND_CONTRIBUTORS"))
         credits_header.setObjectName("sectionHeader")
         panel_layout.addWidget(credits_header)
-        credits = QLabel(
-            "-------------------------------------------------------------------------------\n"
-            "| Desarrollo y diseño multimedia:\n"
-            "-------------------------------------------------------------------------------\n"
-            "|\n"
-            "|   - PINKgeekPDX\n"
-            "|\n"
-            "-------------------------------------------------------------------------------\n"
-            "| Colaboradores:\n"
-            "-------------------------------------------------------------------------------\n"
-            "|\n"
-            "|   - Anemoi\n"
-            "|    (Pruebas exhaustivas y grandes ideas convertidas en funciones reales)\n"
-            "|\n"
-            "|   -----------------------\n"
-            "|\n"
-            "|   - rouvipouvi\n"
-            "|    (Amiga muy querida que ayuda a pulir esta herramienta)\n"
-            "|\n"
-            "-------------------------------------------------------------------------------\n"
-            "| Agradecimientos especiales:\n"
-            "-------------------------------------------------------------------------------\n"
-            "|\n"
-            "|   - Toda la comunidad de Star Citizen por su feedback e ideas.\n"
-            "|\n"
-            "|   -----------------------\n"
-            "|\n"
-            "|   - CIG por crear un juego tan grande y complicado y por su compromiso continuo\n"
-            "|\n"
-            "|   -----------------------\n"
-            "|\n"
-            "|   - CIG por su apoyo a la comunidad y por ofrecer una experiencia única.\n"
-        )
+        credits = QLabel(T("ABOUT_CREDITS"))
         credits.setObjectName("creditsLabel")
         panel_layout.addWidget(credits)
         # Links
@@ -2583,20 +2526,32 @@ class MainWindow(QMainWindow):
                 self.party_events_check.setChecked(True)            
             # Reset toast config
             if hasattr(self, 'toast_position_combo'):
-                self.toast_position_combo.setCurrentText("Bottom Right")           
+                self.toast_position_combo.setCurrentIndex(
+                    self.toast_position_combo.findData("Bottom Right")
+                )
             if hasattr(self, 'toast_size_combo'):
-                self.toast_size_combo.setCurrentText("Medium")           
+                self.toast_size_combo.setCurrentIndex(
+                    self.toast_size_combo.findData("Medium")
+                )
             if hasattr(self, 'toast_duration_combo'):
-                self.toast_duration_combo.setCurrentText("5 seconds")               
+                self.toast_duration_combo.setCurrentIndex(
+                    self.toast_duration_combo.findData("5")
+                )
             if hasattr(self, 'toast_max_stack_combo'):
                 self.toast_max_stack_combo.setCurrentText("5")           
             # Reset party toast config
             if hasattr(self, 'party_toast_position_combo'):
-                self.party_toast_position_combo.setCurrentText("Top Right")          
+                self.party_toast_position_combo.setCurrentIndex(
+                    self.party_toast_position_combo.findData("Top Right")
+                )
             if hasattr(self, 'party_toast_size_combo'):
-                self.party_toast_size_combo.setCurrentText("Medium")           
+                self.party_toast_size_combo.setCurrentIndex(
+                    self.party_toast_size_combo.findData("Medium")
+                )
             if hasattr(self, 'party_toast_duration_combo'):
-                self.party_toast_duration_combo.setCurrentText("5 seconds")               
+                self.party_toast_duration_combo.setCurrentIndex(
+                    self.party_toast_duration_combo.findData("5")
+                )
             if hasattr(self, 'party_toast_max_stack_combo'):
                 self.party_toast_max_stack_combo.setCurrentText("5")
             # Update toast manager

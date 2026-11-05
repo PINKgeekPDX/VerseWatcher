@@ -1,16 +1,13 @@
 import logging
 from datetime import datetime
-import os
-import sys
-import traceback
 
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QTreeWidgetItem, QTreeWidget
 from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
 
 
 class Logger:
-    """Enhanced Logger with rich console formatting and file output"""
+    """Provide rich console formatting and file output."""
     
     def __init__(self, console_widget=None, log_file=None):
         self.console_widget = console_widget
@@ -33,34 +30,32 @@ class Logger:
         self.update_timer.timeout.connect(self.process_pending_updates)
     
     def ensure_autoscroll(self, item=None):
-        """Common method to handle autoscroll functionality for all log methods"""
+        """Scroll to the latest log entry when autoscroll is enabled."""
         if not self.console_widget:
             return
             
         try:
-            should_autoscroll = False
-            
-            # Check if direct parent has autoscroll_check
-            parent = self.console_widget.parent()
-            if hasattr(parent, 'autoscroll_check') and parent.autoscroll_check.isChecked():
-                should_autoscroll = True
-            
-            # If not found in direct parent, try grandparent
-            elif hasattr(parent, 'parent'):
-                grandparent = parent.parent()
-                if hasattr(grandparent, 'autoscroll_check') and grandparent.autoscroll_check.isChecked():
-                    should_autoscroll = True
-            
-            # If autoscroll is enabled, force a scroll to the last item
-            if should_autoscroll:
-                # Queue up the scroll to happen after all UI updates
+            if self._is_autoscroll_enabled():
                 QTimer.singleShot(10, lambda: self._do_scroll())
         except Exception:
             # If there's any error, just force a scroll to bottom after a delay
             QTimer.singleShot(50, lambda: self._do_scroll())
+
+    def _is_autoscroll_enabled(self):
+        """Check the console widget's parent hierarchy for the autoscroll option."""
+        parent = self.console_widget.parent()
+        if parent is None:
+            return False
+
+        for ancestor in (parent, parent.parent()):
+            checkbox = getattr(ancestor, "autoscroll_check", None)
+            if checkbox is not None:
+                return checkbox.isChecked()
+
+        return False
     
     def _do_scroll(self):
-        """Actually perform the scrolling operation"""
+        """Scroll the console to its latest top-level item."""
         if not self.console_widget:
             return
             
@@ -81,7 +76,7 @@ class Logger:
             pass # Silently fail if scrolling fails
     
     def process_pending_updates(self):
-        """Process all pending UI updates in a batch"""
+        """Process all pending UI updates in a batch."""
         if not self.console_widget or not self.pending_ui_updates:
             return
             
@@ -104,7 +99,7 @@ class Logger:
             self.pending_ui_updates.clear()
     
     def queue_console_update(self, update_func):
-        """Queue a console update to be processed in batch"""
+        """Queue a console update to be processed in a batch."""
         if not self.console_widget:
             return
             
@@ -116,7 +111,7 @@ class Logger:
             self.update_timer.start(10)  # Process updates every 10ms
 
     def log_debug(self, message):
-        """Log a debug message (verbose technical details)"""
+        """Log a debug message containing verbose technical details."""
         # Log to file
         if self.file_logger:
             self.file_logger.debug(message)
@@ -136,7 +131,7 @@ class Logger:
             self.queue_console_update(add_debug_item)
     
     def log_info(self, message):
-        """Log an informational message"""
+        """Log an informational message."""
         # Log to file
         if self.file_logger:
             self.file_logger.info(message)
@@ -156,7 +151,7 @@ class Logger:
             self.queue_console_update(add_info_item)
     
     def log_warning(self, message):
-        """Log a warning message"""
+        """Log a warning message."""
         # Log to file
         if self.file_logger:
             self.file_logger.warning(message)
@@ -176,7 +171,7 @@ class Logger:
             self.queue_console_update(add_warning_item)
     
     def log_error(self, message):
-        """Log an error message"""
+        """Log an error message."""
         # Log to file
         if self.file_logger:
             self.file_logger.error(message)
@@ -196,7 +191,7 @@ class Logger:
             self.queue_console_update(add_error_item)
     
     def log_event(self, message, event_details=None):
-        """Log a game event with detailed information"""
+        """Log a game event with detailed information."""
         # Log to file
         if self.file_logger:
             if event_details:
@@ -236,66 +231,23 @@ class Logger:
             self.queue_console_update(add_event_item)
                 
     def log_kill(self, vname, kname, kwep, vship, dtype):
-        """Log a kill event to the console with detailed kill information"""
+        """Log a kill event to the console with detailed information."""
         try:
-            # Get the player name from safer sources
-            # Instead of accessing a potentially non-existent attribute,
-            # just use the provided names directly
-            player_name = "Unknown"
-            # Check if the console_widget and its parent hierarchy exists
-            if hasattr(self, 'console_widget') and hasattr(self.console_widget, 'parent'):
-                # Get main window reference more safely
-                main_window = self.console_widget.parent()
-                while main_window and not hasattr(main_window, 'player_name'):
-                    if hasattr(main_window, 'parent'):
-                        main_window = main_window.parent()
-                    else:
-                        break
-                
-                if main_window and hasattr(main_window, 'player_name'):
-                    player_name = main_window.player_name
-            
-            # Process the kill event
+            player_name = self._get_player_name()
+            message, color_name, event_type = self._get_kill_presentation(
+                vname, kname, player_name
+            )
             timestamp = datetime.now().strftime("%H:%M:%S")
-            
-            # Format kill events with colored icons based on event type
-            if vname == kname:
-                # Suicide event
-                message = f"💀 {vname} committed suicide"
-                self.log_formatted_console(timestamp, message, "purple", "suicide", 
-                                          f"🔫 Weapon: {kwep}", f"🚀 Ship: {vship}", f"💥 Damage: {dtype}")
-                
-            elif ("NPC" in vname) or vname.startswith("PU_"):
-                # NPC death
-                message = f"🤖 NPC {vname} killed by {kname}"
-                self.log_formatted_console(timestamp, message, "orange", "npc", 
-                                          f"🔫 Weapon: {kwep}", f"🚀 Ship: {vship}", f"💥 Damage: {dtype}")
-                
-            elif ("NPC" in kname) or kname.startswith("PU_"):
-                # Killed by NPC
-                message = f"🤖 {vname} killed by NPC {kname}"
-                self.log_formatted_console(timestamp, message, "orange", "npc", 
-                                          f"🔫 Weapon: {kwep}", f"🚀 Ship: {vship}", f"💥 Damage: {dtype}")
-                
-            elif vname == player_name:
-                # Player death
-                message = f"☠️ You were killed by {kname}"
-                self.log_formatted_console(timestamp, message, "red", "death", 
-                                          f"🔫 Weapon: {kwep}", f"🚀 Ship: {vship}", f"💥 Damage: {dtype}")
-                
-            elif kname == player_name:
-                # Player kill
-                message = f"🎯 You killed {vname}"
-                self.log_formatted_console(timestamp, message, "green", "kill", 
-                                          f"🔫 Weapon: {kwep}", f"🚀 Ship: {vship}", f"💥 Damage: {dtype}")
-                
-            else:
-                # Other kill
-                message = f"⚔️ {vname} killed by {kname}"
-                self.log_formatted_console(timestamp, message, "blue", "info", 
-                                          f"🔫 Weapon: {kwep}", f"🚀 Ship: {vship}", f"💥 Damage: {dtype}")
-                                          
-            # Write to file log if configured
+            self.log_formatted_console(
+                timestamp,
+                message,
+                color_name,
+                event_type,
+                f"🔫 Weapon: {kwep}",
+                f"🚀 Ship: {vship}",
+                f"💥 Damage: {dtype}",
+            )
+
             if self.log_file:
                 with open(self.log_file, 'a', encoding='utf-8') as f:
                     f.write(f"[KILL] {timestamp} - {message} | Weapon: {kwep}, Ship: {vship}, Damage: {dtype}\n")
@@ -305,9 +257,40 @@ class Logger:
             import traceback
             self.log_error(traceback.format_exc())
 
+    def _get_player_name(self):
+        """Find the player name in the console widget's parent hierarchy."""
+        player_name = "Unknown"
+        if not hasattr(self, "console_widget") or not hasattr(self.console_widget, "parent"):
+            return player_name
+
+        main_window = self.console_widget.parent()
+        while main_window and not hasattr(main_window, "player_name"):
+            if not hasattr(main_window, "parent"):
+                return player_name
+            main_window = main_window.parent()
+
+        if main_window and hasattr(main_window, "player_name"):
+            return main_window.player_name
+        return player_name
+
+    @staticmethod
+    def _get_kill_presentation(vname, kname, player_name):
+        """Return the message, color, and category for a kill event."""
+        if vname == kname:
+            return f"💀 {vname} committed suicide", "purple", "suicide"
+        if "NPC" in vname or vname.startswith("PU_"):
+            return f"🤖 NPC {vname} killed by {kname}", "orange", "npc"
+        if "NPC" in kname or kname.startswith("PU_"):
+            return f"🤖 {vname} killed by NPC {kname}", "orange", "npc"
+        if vname == player_name:
+            return f"☠️ You were killed by {kname}", "red", "death"
+        if kname == player_name:
+            return f"🎯 You killed {vname}", "green", "kill"
+        return f"⚔️ {vname} killed by {kname}", "blue", "info"
+
     def log_formatted_console(self, timestamp, message, color_name, event_type, *details):
         """
-        Format and log a message to the console with optional details as child items
+        Format and log a message to the console with optional details as child items.
         
         Args:
             timestamp (str): Timestamp for the message
